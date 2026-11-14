@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getAdminAuth } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { exchangeCustomTokenForIdToken } from "@/lib/identity-toolkit";
 import { sessionCookieOptions } from "@/lib/session";
 
@@ -31,6 +32,20 @@ export async function POST(request) {
     }
 
     const auth = getAdminAuth();
+    const db = getAdminDb();
+
+    // Profile URLs are /u/<username>, so handles must be unique.
+    const taken = await db
+      .collection("users")
+      .where("usernameLower", "==", username.toLowerCase())
+      .limit(1)
+      .get();
+    if (!taken.empty) {
+      return NextResponse.json(
+        { error: "That username is already taken." },
+        { status: 400 }
+      );
+    }
 
     // Create the account with the Admin SDK.
     const userRecord = await auth.createUser({
@@ -42,6 +57,20 @@ export async function POST(request) {
     // Store the chosen handle as a custom claim, since Firebase Auth has
     // no native "username" field.
     await auth.setCustomUserClaims(userRecord.uid, { username });
+
+    // Profile document (bio, banner, avatar, etc. get added from /u/<name>).
+    try {
+      await db.collection("users").doc(userRecord.uid).set({
+        username,
+        usernameLower: username.toLowerCase(),
+        displayName: username,
+        theme: "vice",
+        hasAvatar: false,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } catch {
+      // Created lazily the first time the owner opens their profile.
+    }
 
     // Admin SDK can create accounts but cannot "sign in" with a password —
     // there's no such API. So we mint a custom token server-side with the

@@ -1,6 +1,9 @@
+import Link from "next/link";
+import SearchBar from "@/components/SearchBar";
 import SiteHeaderClient from "@/components/SiteHeaderClient";
 import MainNav from "@/components/MainNav";
 import StoriesRail from "@/components/StoriesRail";
+import ComposerLauncher from "@/components/ComposerLauncher";
 import Feed from "@/components/Feed";
 import EmptyFeed from "@/components/EmptyFeed";
 import ScrollTopButton from "@/components/ScrollTopButton";
@@ -30,9 +33,21 @@ export default async function HomePage() {
 
       <main className="page-content">
         <h1 className="welcome-title">
-          Welcome back, <span className="name">{handle}</span>
+          Welcome back,{" "}
+          {user?.username ? (
+            <Link href={`/u/${user.username}`} className="name">
+              {handle}
+            </Link>
+          ) : (
+            <span className="name">{handle}</span>
+          )}
         </h1>
 
+        <div className="sr-pad">
+          <SearchBar />
+        </div>
+
+        <ComposerLauncher user={user} />
         <StoriesRail stories={stories} />
         {posts.length > 0 ? <Feed posts={posts} /> : <EmptyFeed />}
       </main>

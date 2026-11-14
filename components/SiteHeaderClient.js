@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import AuthModal from "./AuthModal";
 
 export default function SiteHeaderClient({ user }) {
@@ -11,7 +12,7 @@ export default function SiteHeaderClient({ user }) {
     setLoggingOut(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      window.location.reload();
+      window.location.href = "/";
     } finally {
       setLoggingOut(false);
     }
@@ -20,20 +21,36 @@ export default function SiteHeaderClient({ user }) {
   return (
     <>
       <header className="site-header">
-        <a href="#" className="brand">
+        <Link href="/" className="brand">
           GTA6<span>FanBase</span>
-        </a>
+        </Link>
 
         {user ? (
-          <button
-            className="signup-btn"
-            onClick={handleLogout}
-            disabled={loggingOut}
-          >
-            <span className="signup-btn-inner">
-              {loggingOut ? "Logging out..." : "Log Out"}
-            </span>
-          </button>
+          <div className="header-actions">
+            {user.username && (
+              <Link href={`/u/${user.username}`} className="header-profile">
+                <span className="header-profile-dot">
+                  {user.username.charAt(0).toUpperCase()}
+                </span>
+                <span className="header-profile-name">Profile</span>
+              </Link>
+            )}
+            {user.username && (
+              <Link href="/create" className="header-create">
+                <span aria-hidden="true">+</span>
+                <span className="header-create-label">Create</span>
+              </Link>
+            )}
+            <button
+              className="signup-btn"
+              onClick={handleLogout}
+              disabled={loggingOut}
+            >
+              <span className="signup-btn-inner">
+                {loggingOut ? "Logging out..." : "Log Out"}
+              </span>
+            </button>
+          </div>
         ) : (
           <button className="signup-btn" onClick={() => setOpen(true)}>
             <span className="signup-btn-inner">Join the Heist</span>
