@@ -11,36 +11,34 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Requirements
+
+- Node.js 22.x (pinned in `package.json` `engines`; also set Vercel > Settings > General > Node.js Version to 22.x)
+- A Firebase project with Auth (email/password), Firestore and (optionally) Storage
+
 ## Project structure
 
 ```
 app/
-  layout.js        Root layout, loads global styles and metadata
-  page.js           Home page — assembles header, nav, stories, feed
-  globals.css       Ported theme styles (dark GTA6-inspired palette)
-components/
-  SiteHeader.js      Top bar with brand + "Join the Heist" button
-  MainNav.js         Horizontally scrollable section nav
-  StoriesRail.js     Story bubbles rail
-  Feed.js            Renders the list of posts
-  PostCard.js        Single post: like/save/double-tap-to-like (client component)
-  PostMedia.js       Renders 16:9 / 1:1 / grid media layouts
-  ScrollTopButton.js Floating scroll-to-top button (client component)
-  icons.js           Shared inline SVG icons
-lib/
-  mock-data.js       Mock stories + posts (swap for real data later)
-  format-count.js    Like-count formatting helpers (e.g. 2400 -> "2.4K")
+  layout.js, page.js, globals.css   Root layout, home feed, theme styles
+  api/                              Auth, posts, profile, uploads route handlers
+  create/  p/[id]/  u/[username]/   Composer, single post, profile pages
+  search/  profile/                 Search page, redirect to your own profile
+  media/ video/ avatar/             Image, video-stream and avatar endpoints
+components/                         UI (PostCard, CommentsSheet, AuthModal, ...)
+  composer/                         Multi-step post composer
+lib/                                Server data access, Firebase Admin, schema, helpers
 ```
 
-## Notes
+## Fixing `ERR_REQUIRE_ESM ... jose ... jwks-rsa`
 
-- Interactivity (like, save, double-tap heart burst, scroll-to-top) is implemented with small client components, everything else renders as server components.
+`firebase-admin` depends on `jwks-rsa`, which `require()`s `jose`. Newer `jose` releases are ESM-only and break on runtimes without `require(esm)` support. This project avoids it two ways: Node 22 (`engines`) and an `overrides` entry in `package.json` that pins `jose` to the 4.x line under `jwks-rsa`. After pulling changes, delete `node_modules` and any lockfile, run `npm install`, then check with `npm ls jose`.
 
 ## Feed data (real, Firestore via Admin SDK)
 
-Mock data is gone. The home page (`app/page.js`) is an async Server Component that reads posts and stories straight from Firestore using the Admin SDK (`lib/feed-data.js`) — no client Firestore SDK, same service-account credentials already used for Auth. The page is marked `export const dynamic = "force-dynamic"` so likes/saves and new posts are never stale from caching.
+The home page (`app/page.js`) is an async Server Component that reads posts and stories straight from Firestore using the Admin SDK (`lib/feed-data.js`) — no client Firestore SDK, same service-account credentials already used for Auth. The page is marked `export const dynamic = "force-dynamic"` so likes/saves and new posts are never stale from caching.
 
-There is currently **no UI to create a post or story** — by design, for now. Until you add a composer, `posts` and `stories` collections will be empty and the feed shows a clean empty state (`components/EmptyFeed.js`) instead of a broken-looking blank page.
+Posts are created from `/create` (see below). Stories have no UI yet, so the `stories` collection stays empty unless you add documents in the Firebase Console. When there are no posts the feed shows a clean empty state (`components/EmptyFeed.js`).
 
 ### Firestore schema
 
@@ -84,10 +82,6 @@ There is currently **no UI to create a post or story** — by design, for now. U
 | `POST /api/posts/save` | Toggles the current user's save on a post (requires session cookie) |
 
 Both run as a Firestore transaction and are rejected with `401` if there's no valid session — `PostCard.js` calls these optimistically and rolls back on failure (e.g. if you're logged out).
-
-### Adding data while there's no composer yet
-
-Until a create-post/story UI exists, add documents directly in the Firebase Console (Firestore Database tab) matching the schema above, or write a small seed script using the same Admin SDK credentials.
 
 ## Auth (real, server-side, Firebase Admin SDK)
 
