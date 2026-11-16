@@ -256,3 +256,42 @@ Notes: handles can't be changed and accounts can't be deleted from settings yet.
 **Controls (per community):** lock chat (everyone / mods & admins / admins only), links and images (everyone / staff only / nobody), leak policy (allowed / covered behind a tap-to-reveal / banned), slow mode, new-member wait, mods-can-approve, show member list.
 
 Firestore: `communities/{id}` with subcollections `members`, `requests`, `bans`, `assets` (avatar/banner), `posts` (+ `media`); `users/{uid}.communityIds` and `.communityPending` power "your communities" without composite indexes. All writes go through `POST /api/communities` (`action` = create, join, request, approve, set-role, update, post, ...). Images are served by `GET /cmedia/...`. No new env vars or indexes are needed.
+
+## Public info pages (/terms /privacy /cookies /guidelines /copyright /disclaimer /help /contact /about)
+
+Every page shares one frame (`components/info/InfoShell.js`), one stylesheet (`app/info.css`, every rule starts with `.ip`) and one source of truth, so you change a thing in one place:
+
+| To change... | Edit |
+| --- | --- |
+| Page names, order, colours, blurbs, side-menu links | `INFO_PAGES` in `lib/site.js` |
+| Contact email, operator name, governing law, DMCA agent, response time, minimum age, "last updated" date | `CONTACT` and `LEGAL` in `lib/site.js` (or set `NEXT_PUBLIC_CONTACT_EMAIL` in Vercel) |
+| The "not affiliated with Rockstar / Take-Two" wording | `NOT_AFFILIATED` in `lib/site.js` |
+| Cookies and browser storage table | `STORAGE_ITEMS` in `lib/site.js` |
+| Third-party services listed in Privacy and Cookies | `PROVIDERS` in `lib/site.js` |
+| Plan names, prices, benefits, comparison table, plan FAQ | `lib/plans.js` (used by `/upgrade`, `/about#plans`, the side menu and the Terms) |
+| Help Center questions and answers | `lib/help.js` |
+| Contact form topics | `CONTACT_TOPICS` in `lib/site.js` |
+
+Bump `LEGAL.updated` and `LEGAL.updatedISO` whenever you change the legal text. `/sitemap.xml` and `/robots.txt` are generated from the same list. Contact messages are saved in the Firestore collection `contactMessages`.
+
+
+## Perks Shop (`/perks`)
+
+One-time purchases that stay on the account (separate from the monthly plans on `/upgrade`). The catalog lives in `lib/perks.js`; owned perks are stored as an array of ids on `users/{uid}.perks`.
+
+| Perk | Price | What it does |
+| --- | --- | --- |
+| Forever Pin | $4.99 | Every comment the owner posts is pinned to the top of its thread, with no expiry (`pinForever` + a far-future `pinnedUntil` saved on the comment). |
+| Essay Mode | $2.99 | Comment limit goes from 500 to 1,500 characters (enforced in `app/api/posts/comments`). |
+| Neon Glow | $1.99 | Animated neon frame around the owner's comments, in their profile accent colours. |
+| Vice City Pack | $3.99 | Unlocks 3 exclusive profile accents (`PERK_THEMES` in `lib/profile-themes.js`), enforced in `app/api/profile`. |
+| Story Extender | $3.99 | Stories stay up 72 hours instead of 24 (`expiresAt` set in `app/api/stories`). |
+| Big Bio | $1.99 | Bio limit goes from 160 to 400 characters (enforced in `app/api/profile`, shown in both profile editors). |
+| Supporter Badge | $2.49 | Gold star next to the owner's name on posts, comments, profile and search. |
+| Gradient Name | $2.99 | The owner's name becomes a moving gradient of their two accent colours, everywhere it shows. |
+| Halo Avatar | $2.49 | Pulsing glow in the owner's accent colours around their avatar, everywhere it shows. |
+| Neon Nights Pack | $3.99 | Three more exclusive accents (Midnight Drive, Laser Lime, Cherry Cola), enforced in `app/api/profile`. |
+
+The three cosmetic perks (Supporter Badge, Gradient Name, Halo Avatar) are visible to everyone, so they travel with the author as a short `flair` list (`publicFlair` in `lib/perks.js`) and render through `components/Flair.js`. Nothing else a person owns is ever sent to other viewers.
+
+No payment is connected yet. While `PERKS_FREE_WHILE_TESTING` is `true` in `lib/perks.js`, "Get" unlocks the perk for $0. Set it to `false` and `app/api/perks/route.js` refuses paid perks (HTTP 402) until you add the checkout step there.
