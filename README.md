@@ -203,9 +203,9 @@ If Storage isn't ready yet, the upload fails with a clear message and YouTube li
 
 ## Plans and the Upgrade page (`/upgrade`)
 
-Four plans, defined in one file: `lib/plans.js`.
+Four plans, defined in one file: `lib/plans.js`. Prices are typed once, in US dollars, and shown to each visitor in their own currency (see **Prices in local currency** below).
 
-| Plan | Price |
+| Plan | Price (USD) |
 |---|---|
 | Boardwalk Drifter (free) | $0.00 |
 | Getaway Wheelman | $4.99/mo |
@@ -275,11 +275,37 @@ Every page shares one frame (`components/info/InfoShell.js`), one stylesheet (`a
 Bump `LEGAL.updated` and `LEGAL.updatedISO` whenever you change the legal text. `/sitemap.xml` and `/robots.txt` are generated from the same list. Contact messages are saved in the Firestore collection `contactMessages`.
 
 
+## Prices in local currency
+
+Every price is typed once, in **US dollars** (`price` in `lib/plans.js` and `lib/perks.js`). Visitors see it in their own currency at the live exchange rate.
+
+- **Country to currency:** `lib/fx.js` reads the visitor's country from Vercel's `x-vercel-ip-country` header (Cloudflare's `cf-ipcountry` also works). With no IP header, such as on localhost, it uses the region in the browser language (`en-ZA` means South Africa). `lib/currency.js` maps the country to a currency; anything unlisted shows USD. Euro countries all get EUR.
+- **Live rate:** fetched on the server from `open.er-api.com` (free, no key, updated daily), with `@fawazahmed0/currency-api` on jsDelivr as a backup. Next caches the answer for an hour (`REVALIDATE_SECONDS` in `lib/fx.js`). If both sources are down and there is no earlier answer, everyone sees USD. The free source asks for credit, which is the "Rates by Exchange Rate API" link in the small print.
+- **Clean rounding, never down:** the converted price is rounded UP to the roundest number that stays within `ROUND_UP_TOLERANCE` (3.5%) of the real conversion. `$10` at R16.598 is R165.98, shown as **R170**. When no round number is close enough (GBP, EUR, CHF and other strong currencies where `$4.99` is about `£3.79`), the plain live conversion is shown instead (**£3.79**). Raise `ROUND_UP_TOLERANCE` in `lib/currency.js` for rounder numbers, lower it for numbers closer to the real rate.
+- **Dollar-family currencies** other than USD get a prefix so they are not read as US dollars: `CA$`, `A$`, `MX$`.
+- **Where it shows:** upgrade cards and comparison table, `/about` plan cards, the Perks Shop, and prices written inside FAQ, Terms and Help text. A small note under the prices says which currency is shown (hidden for USD visitors).
+- **Prices inside copy:** text strings use a token, `{{usd:4.99}}` (build it with `usdToken(price)` from `lib/currency.js`). `renderRich` turns it into the local price; `plainText`, search and the FAQ JSON-LD keep US dollars.
+- **In your own components:** `<Money usd={4.99} />`, or `const money = useMoney(); money(4.99)` for template strings. Both read the visitor's currency from `CurrencyProvider`, which the root layout fills in on the server, so there is no flash of dollars on first paint.
+- **Checkout later:** nothing is charged yet. When you add payments, decide which currency you really bill in. The local price shown is a display conversion of the USD price.
+
+## AI chat bubble (bottom-left)
+
+`components/AiBubble.js` + `app/aibubble.css`, mounted once in `app/layout.js`, so it is on every page. It is **design only**: the bubble itself does nothing when pressed (no chat yet). It floats, blinks, its eyes follow the pointer, stars orbit it and an XP ring fills; all of that stops with the *Reduce motion* setting or the phone's reduced-motion option.
+
+The small **X** on its top corner asks how to hide it:
+
+| Choice | What happens |
+|---|---|
+| Just this session | Hidden until the tab is closed (`sessionStorage`). Back on the next visit. |
+| Never show it again | Hidden for good. Saved as the cookie `gta6fb_aibubble=hide` (the server reads it, so the bubble is not even in the first paint) and, when signed in, as `look.aiBubble = "hide"` on `users/{uid}.prefs`. |
+
+**Turning it back on:** Settings > City Look > *AI chat bubble* > *Show the AI chat bubble*. The setting lives in the `look` section (`aiBubble: "show" | "hide"` in `lib/look.js`) and is changed with `setAiBubble()`. If this device and the account disagree, *hide* wins and both end up hidden when Settings is opened. When the chat is built, only `AiBubble` needs to start doing something on press; the hide and show plumbing stays as is.
+
 ## Perks Shop (`/perks`)
 
-One-time purchases that stay on the account (separate from the monthly plans on `/upgrade`). The catalog lives in `lib/perks.js`; owned perks are stored as an array of ids on `users/{uid}.perks`.
+One-time purchases that stay on the account (separate from the monthly plans on `/upgrade`). The catalog lives in `lib/perks.js` (prices in USD, shown in the visitor's currency); owned perks are stored as an array of ids on `users/{uid}.perks`.
 
-| Perk | Price | What it does |
+| Perk | Price (USD) | What it does |
 | --- | --- | --- |
 | Forever Pin | $4.99 | Every comment the owner posts is pinned to the top of its thread, with no expiry (`pinForever` + a far-future `pinnedUntil` saved on the comment). |
 | Essay Mode | $2.99 | Comment limit goes from 500 to 1,500 characters (enforced in `app/api/posts/comments`). |
@@ -295,3 +321,16 @@ One-time purchases that stay on the account (separate from the monthly plans on 
 The three cosmetic perks (Supporter Badge, Gradient Name, Halo Avatar) are visible to everyone, so they travel with the author as a short `flair` list (`publicFlair` in `lib/perks.js`) and render through `components/Flair.js`. Nothing else a person owns is ever sent to other viewers.
 
 No payment is connected yet. While `PERKS_FREE_WHILE_TESTING` is `true` in `lib/perks.js`, "Get" unlocks the perk for $0. Set it to `false` and `app/api/perks/route.js` refuses paid perks (HTTP 402) until you add the checkout step there.
+
+## Leonida World Hub (`/world`)
+
+A GTA 6-only interactive community area linked from the main navigation and side menu. The hub includes:
+
+- **Map discoveries:** a schematic Leonida area selector (Vice City, Port Gellhorn, Ambrosia, Mount Kalaga, Grassrivers, Leonida Keys and Other Leonida), member-submitted discoveries, and filters by area. It is an area index, not an official or geographically precise game map.
+- **Character collection:** members can toggle Lucia and Jason in their personal collection (`users/{uid}.gta6Characters`).
+- **Vehicle spotter:** members submit vehicle sightings by category; each signed-in member can rate a submission once from 1–5 stars.
+- **Trailer frames:** members link a YouTube trailer, select a trailer and timestamp in seconds, and discuss that specific moment. Frame comments live in `gta6World/{id}/comments`.
+- **Feature wishlist:** members submit ideas and can vote once per idea.
+- **Predictions:** members create a question with 2–5 possible outcomes and vote once. The creator resolves the prediction; each correct voter receives 10 reputation points (`users/{uid}.gta6Reputation`).
+
+All hub submissions are stored in `gta6World/{itemId}` with a `type` of `location`, `vehicle`, `trailer`, `wishlist` or `prediction`. Writes go through `POST /api/world` and require a valid signed-in session. Member-submitted discoveries, ratings and predictions are not verified by Rockstar and should be treated as fan contributions. No additional environment variables or Firestore indexes are required.
