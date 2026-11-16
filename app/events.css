@@ -1,0 +1,73 @@
+/* Event composer: the Event format card, form cards, pin picker, recap */
+
+/* Five formats: let the last card span the row instead of sitting alone. */
+.cmp-types .cmp-type:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+/* Form cards */
+.ev-card { padding-bottom: 8px; }
+.ev-card-h { margin-bottom: 16px; }
+.ev-card-h h3 { margin-bottom: 2px; font-size: 16px; font-weight: 800; color: var(--text); }
+.ev-card-h p { font-size: 13px; line-height: 1.4; color: var(--text-dim); }
+.ev-card > .cmp-field:last-child, .ev-card > .cmp-seg-wrap:last-child { margin-bottom: 14px; }
+.ev-rows { margin: -4px 0 6px; border-top: 1px solid var(--border); }
+.ev-mode-hint { margin: -4px 0 18px; }
+
+/* When */
+.ev-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+@media (max-width: 400px) { .ev-grid { grid-template-columns: 1fr; gap: 0; } }
+.ev-quick { margin: -8px 0 20px; }
+.ev-end-row { display: flex; gap: 10px; align-items: center; }
+.ev-end-row .cmp-input { max-width: 190px; }
+input[type="date"].cmp-input, input[type="time"].cmp-input { min-height: 48px; color-scheme: dark; }
+
+/* Radio cards (who can join, privacy) */
+.cmp-opts { display: flex; flex-direction: column; gap: 8px; }
+.cmp-opts button {
+  all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 14px;
+  padding: 13px 14px; border-radius: 16px; background: var(--surface-raised); border: 1.5px solid var(--border);
+  transition: border-color .15s ease, background .15s ease;
+}
+.cmp-opts button:hover { border-color: color-mix(in srgb, var(--a) 60%, var(--border)); }
+.cmp-opts button:focus-visible { outline: 2px solid var(--a); outline-offset: 2px; }
+.cmp-opts button.on { border-color: var(--a); background: color-mix(in srgb, var(--a) 12%, var(--surface-raised)); }
+.cmp-opts i { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--text-dim); display: grid; place-items: center; transition: border-color .15s ease; }
+.cmp-opts button.on i { border-color: var(--a); }
+.cmp-opts button.on i::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, var(--a), var(--b)); }
+.cmp-opts b { display: block; font-size: 15px; font-weight: 800; }
+.cmp-opts small { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.4; color: var(--text-dim); }
+
+/* Pin picker */
+.ev-pin { display: flex; flex-direction: column; gap: 10px; }
+.ev-pin-search { display: flex; gap: 8px; align-items: center; }
+.ev-pin-search .cmp-input { flex: 1; min-width: 0; }
+.ev-locate {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 14px; border-radius: 14px; font-size: 14px; font-weight: 700; color: var(--a);
+  border: 1.5px dashed color-mix(in srgb, var(--a) 55%, var(--border)); background: color-mix(in srgb, var(--a) 8%, transparent);
+}
+.ev-locate:hover:not(:disabled) { border-color: var(--a); } .ev-locate:disabled { opacity: .6; cursor: default; }
+.ev-locate:focus-visible { outline: 2px solid var(--a); outline-offset: 2px; }
+.ev-results { list-style: none; margin: 0; padding: 4px; border-radius: 16px; background: var(--surface-raised); border: 1px solid var(--border); }
+.ev-results button { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; }
+.ev-results button:hover, .ev-results button:focus-visible { background: rgba(255,255,255,.07); }
+.ev-pin.has-pin { gap: 0; overflow: hidden; border-radius: 18px; border: 1.5px solid var(--border); background: var(--surface-raised); }
+.ev-map { display: block; width: 100%; height: 210px; border: 0; background: #1a1620; }
+.ev-pin-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.ev-pin-txt { flex: 1; min-width: 0; }
+.ev-pin-txt b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-pin-txt small { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+/* Recap (live aside + review step) */
+.ev-sum { overflow: hidden; border-radius: 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--a) 40%, var(--border)); }
+.ev-sum-cover { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.ev-sum-art { height: 96px; display: grid; place-items: center; color: #0d0b10; background: linear-gradient(135deg, var(--a), var(--b)); }
+.ev-sum-body { padding: 16px; }
+.ev-sum-cat { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; letter-spacing: .3px; color: #0d0b10; background: linear-gradient(135deg, var(--a), var(--b)); }
+.ev-sum h3 { margin-top: 10px; font-size: 20px; font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.ev-sum-host { margin-top: 2px; font-size: 13px; color: var(--text-dim); }
+.ev-sum-about { margin-top: 12px; font-size: 14px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-sum-rows { margin: 14px 0 0; }
+.ev-sum-rows > div { display: grid; grid-template-columns: 84px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13.5px; }
+.ev-sum-rows dt { color: var(--text-dim); font-weight: 700; } .ev-sum-rows dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.ev-sum-flags { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ev-sum-flags li { padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--text-dim); border: 1px solid var(--border); }
