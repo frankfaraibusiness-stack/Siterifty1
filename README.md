@@ -71,8 +71,11 @@ Posts are created from `/create` (see below). Stories have no UI yet, so the `st
   gradient?: string,          // CSS gradient string, or...
   colorA?: string, colorB?: string, // ...two hex colors to build one
   createdAt: Timestamp,
+  hearts?: { [uid]: { username: string, at: Timestamp } }, // set by /api/stories/like
 }
 ```
+
+Hearts: anyone signed in can heart someone else's story (`POST /api/stories/like { id, liked }`); only the story's owner sees the count and the list of people (`GET /api/stories/like?id=`). Hearts live on the story doc, so they go when the story is deleted or expires.
 
 ### New API routes
 
@@ -410,3 +413,20 @@ All five formats (photo, video, poll, theory, event) share the same upgrades:
 
 The logic is in `lib/card-helpers.js` (pure, no imports) and tested with `npm test`,
 which runs `tests/card-helpers.test.mjs` under three time zones (the day-label helpers depend on the viewer's zone).
+
+## Event groups: status, countdown and host controls
+
+Open an event's group chat and the panel starts with the event's name, date, status (starts in…, live now, ended) and a ticking countdown, so people are reminded what the chat is for. The host also gets two controls there (`components/EventGroup.js`, server side in `lib/event-group-data.js`, route `app/api/posts/group/route.js`):
+
+- **End event** stores `event.closedAt` on the post. The event shows as ended everywhere (feed card, Events page, the group panel), nobody new can join, and the group chat stays open. It also works before the event starts, to call it off.
+- **Delete group** wipes every message and closes the chat. The event stays up, and the host can **Start a new group** later. A small `deleted: true` marker is kept on `eventGroups/{postId}` so the group isn't quietly rebuilt.
+
+Both are host-only and checked on the server again on every call.
+
+## Polls: no expiry by default, visit-based clean-up
+
+New polls never expire unless the author picks a length (`POLL_LENGTHS` in `lib/post-schema.js`; `poll.endsAt` is `null` for "No expiry"). A poll with a length is **deleted** (post, comments, votes) once its time is up. There is no cron job: `lib/poll-expiry.js` sweeps expired polls whenever someone loads the feed, a profile, search, saved posts or a post page, and when someone tries to vote on one. Until the sweep reaches a poll, `canView` in `lib/feed-data.js` already hides it. The sweep is one range query on `poll.endsAt` (Firestore's automatic single-field index covers it, so no composite index is needed). Theory "Facts or Cap" verdicts never expire.
+
+## Community page layout
+
+On a community's page the posts and the community's own information are kept apart. The posts sit in a framed box that scrolls on its own (`components/communities/CommunityFeed.js`), under a compact composer that opens when you click it, so the page stays short however many posts there are; a "Back to top" button appears inside the box. Posts load 20 at a time (`fetchCommunityPosts` in `lib/community-data.js`): the next page loads when you reach the end of the box, from `GET /api/communities/posts` (public communities for anyone, private ones for members only). Pinned posts always come first. About, what's allowed and the rules are one info panel: a sidebar on wide screens, and one folded "About & rules" bar above the feed on phones. The About tab shows the same information in full.
