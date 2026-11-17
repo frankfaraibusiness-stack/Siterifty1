@@ -1,0 +1,17 @@
+/* Small print about converted prices (components/PriceNote.js). */
+.fx-note {
+  margin: 14px auto 0;
+  max-width: 62ch;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.fx-note a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.fx-note a:hover {
+  color: var(--text);
+}

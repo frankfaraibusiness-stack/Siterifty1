@@ -334,3 +334,79 @@ A GTA 6-only interactive community area linked from the main navigation and side
 - **Predictions:** members create a question with 2–5 possible outcomes and vote once. The creator resolves the prediction; each correct voter receives 10 reputation points (`users/{uid}.gta6Reputation`).
 
 All hub submissions are stored in `gta6World/{itemId}` with a `type` of `location`, `vehicle`, `trailer`, `wishlist` or `prediction`. Writes go through `POST /api/world` and require a valid signed-in session. Member-submitted discoveries, ratings and predictions are not verified by Rockstar and should be treated as fan contributions. No additional environment variables or Firestore indexes are required.
+
+## Social features (replies, follows, friends)
+
+- **Comment replies** – `POST /api/posts/comments` accepts `parentId`. Replies live in the same `posts/{id}/comments` collection with `parentId` (their top-level comment), optional `replyToUser`, and the top-level comment keeps a `replyCount`. Threads are one level deep; deleting a comment deletes its replies. Replies are fetched lazily with `GET /api/posts/comments?postId=…&parentId=…`. Comment likes use the existing `/api/posts/comments/like` route for replies too.
+- **Follow** – `POST /api/social/follow { username, follow }`, stored in `follows/{fromUid}_{toUid}`.
+- **Friends** – `POST /api/social/friend { username, action }` with `request | cancel | accept | decline | remove`, stored in `friendships/{uidA}_{uidB}` (`status: pending | accepted`). Incoming requests show on your own profile under "Friend requests".
+- **Following feed** – the home page has a "For you / Following" switch (`/?feed=following`) for signed-in members.
+- **Profile cards** – Posts / Likes / Comments / Saves are collapsed dropdowns (`components/ProfileStats.js`).
+- Styles for all of the above are in `app/social.css`. None of the new queries need a composite Firestore index.
+
+### More small features
+
+- **Comments**: edit your own comment (`PATCH /api/posts/comments`, shows "edited"), `@handle` links to profiles (`components/MentionText.js`), long comments fold behind "Read more", an "Author" heart badge when the post's author liked a comment, and unsent comment text is kept per post in `localStorage`.
+- **Profiles**: a "Follows you" chip, and the followers / following / friends counts open a list (`GET /api/social/list`; private accounts keep these lists private).
+
+## Messages (`/messages`)
+
+Direct messages between members, built on the follow / friend system above (no second social graph). The nav "Messages" pill and the side menu link to it, with an unread badge.
+
+- **Who can message you** – Settings > Wanted Level > *Who can message you*: **Everyone · Friends & followers · Friends only · Followers only · No one** (`users/{uid}.prefs.safety.whoCanMessage`, default *Friends & followers*, so by default members can message the people they follow and their friends). Two more switches live there: **Read receipts** and **Show when I'm online**. It is enforced **on the server for every send** (`POST /api/messages/send`), not just in the UI. People you've already messaged can always reply, "No one" only blocks *starting* chats, and blocking someone cuts every tie (follows both ways, friendship) and hides the chat.
+- **New message** (its own sheet: bottom sheet on phones, dialog on desktop) – search by handle (`@dav…`), see how you're connected, and **Message / Follow / Add friend / Profile** per person. The Message button shows a lock and the reason when the person's setting doesn't allow you yet. Also lists your friends, people you follow, and friend requests (Accept / Decline). Members who switched off "Show me in search", or are private, only come up on an exact handle.
+- **Profiles** – a **Message** button next to Follow / Add friend (`components/messages/MessageButton.js`); it unlocks live the moment you follow or befriend someone.
+- **Ticks and labels** – 1 tick + "Not delivered" · 2 ticks + "Delivered" · coloured ticks + "Seen". *Delivered* = the recipient's open site checked in; *Seen* = they opened the chat (and have read receipts on). Plus "Sending…" / "Failed · Retry", and a Message info sheet with the times.
+- **Message actions (the 3 dots, long-press or swipe-to-reply)** – react, reply (quote), copy, edit your own text (15 min, shows "edited"), delete **for me** or **for everyone**.
+- **GTA tools (the + button)** – *Session invite* (platform, mode, lobby code, player slots, time shown in each reader's own time zone), *Share a code* (lobby / crew / gamer ID / promo, optional "reveal" gate, one-tap copy), *Meet-up pin* (Vice City, Leonida Keys, Grassrivers, Port Gellhorn, Ambrosia, with a note and a time), *Photos* (compressed, only the two people in the chat can open them), *Stickers*, and **Quick replies** ("Online tonight?", "Join my lobby?").
+- **Custom emoji** – 39 original SVG emoji (`components/messages/GtaEmoji.js`, ids in `lib/chat-config.js`), used for the picker, reactions and in-text `:fire:` shortcodes. No system emoji.
+- **Also** – typing indicator, online dot and "Active 5m ago", day dividers, "New messages" divider, jump-to-latest, load earlier, pin / mute / delete chat, optimistic sending with retry, unsent drafts kept per chat.
+
+### How it works (no extra services)
+
+There are no websockets. Every open page makes one tiny request (`GET /api/messages/summary`, 25 s, 5 s on `/messages`; `components/messages/MessageSync.js` in the root layout) that reads one document, marks waiting messages *delivered*, counts unread messages and pending friend requests, and records you as online. An open chat polls only for changed messages (`updatedAt > cursor`, about every 2.5 s) and the chat list only reloads when `inbox/{uid}.rev` changes. If you later want true push, swap `lib/message-sync.js` and the poll in `ThreadView.js` for Firestore listeners or SSE; the data model doesn't change.
+
+### Firestore (Admin SDK only; no rules or composite indexes needed)
+
+```
+conversations/{uidA}_{uidB}            sorted pair, same id scheme as friendships
+  users, names, last{id,from,type,text,at,deleted,delivered,seen}, unread{uid}, hasSent{uid},
+  pinned{uid}, muted{uid}, clearedAt{uid}, hideLast{uid}, typing{uid}, sentAt{uid}
+conversations/{id}/messages/{msgId}    from, to, type, text|sticker|invite|code|meetup|media, replyTo, rx{uid:emojiId},
+                                       createdAt, updatedAt, deliveredAt, seenAt, readAt, editedAt, deleted, hiddenFor[]
+conversations/{id}/media/{msgId}       { data: base64 jpeg }  (served by GET /api/messages/media/…, participants only)
+inbox/{uid}                            { unread, rev, pending[convId], activeAt }
+```
+
+Friend requests are **not** stored here: the badge counts `friendships` where `to == you` and `status == "pending"` (two equality filters; if Firestore ever asks for an index it logs a link, and the badge just shows 0 until it exists).
+
+### Routes
+
+`GET /api/messages/summary` · `conversations` · `thread?with=handle|id=&since=&before=&read=1&meta=1` · `people?q=` (search) / no `q` (your crew) · `relation?username=` · `POST send` · `message` (react / edit / delete) · `conversation` (pin / mute / delete chat) · `typing` · `GET media/{convId}/{msgId}`. Follow and friend buttons call the existing `/api/social/follow` and `/api/social/friend`. Blocking (`/api/settings/blocked`) also removes follows and friendship.
+
+### Files
+
+`lib/chat-config.js` (shared options, limits, emoji ids, permission rules) · `lib/chat-social.js` (reads follows/friendships, permission checks, people search) · `lib/messages-data.js` (chats, delivery, actions) · `lib/message-sync.js` · `components/messages/*` · `app/messages/{page,loading,messages.css}`.
+
+## Events page, Saved posts, trending tags and shortcuts
+
+- **Events (`/events`)** – every event you're allowed to see in one place, rendered with the real event card (RSVP, countdown, add to calendar). Tabs: **Upcoming · Live now · This week · I'm going · Hosting · Past** (the last two need a login), each with a live count; filter by **place** (In-game / Real world / Online) and **kind** (Meetup, Watch party, ...); search by title, host, venue or tag. All state lives in the URL (`/events?when=week&mode=irl&cat=Car%20meet&q=vice`), so every view is shareable. `lib/event-data.js` reads events with one equality filter on `type` (no composite index) and `lib/event-filters.js` does the filtering and ordering. Private events and private accounts are hidden exactly as in the feed. Linked from the nav pills, the side menu and the sitemap; "Host an event" opens `/create?type=event`.
+- **Saved posts (`/saved`)** – the posts you bookmarked, newest first, using the existing save button (`array-contains` on `savedBy`, no composite index). Only you can see it; it's in the side menu and blocked in `robots.txt`.
+- **Trending tags** – a chip row on the home feed ("For you" tab) built from the posts already loaded, so it costs no extra reads. Each chip opens search for that `#tag` (`lib/trending.js`, `components/TrendingTags.js`).
+- **Keyboard shortcuts** – `/` focuses search, `c` creates a post, `g` then `h / c / e / m / s / w` jumps to Home / Communities / Events / Messages / Saved / World, `?` lists them. They pause while typing and while another dialog is open (`components/KeyboardShortcuts.js`).
+- **Polish (`app/enhance.css`, loaded last)** – keyboard focus rings, themed text selection and scrollbars, balanced headings, a quiet hover lift on feed cards, safe-area spacing for the scroll-to-top button, a "Skip to content" link (`components/SkipLink.js`), print styles, and `prefers-reduced-motion` support. On phones the four nav pills drop their icons so every label fits.
+
+## Post card upgrades
+
+All five formats (photo, video, poll, theory, event) share the same upgrades:
+
+- **Typed cards**: a soft wash of the format colour, a matching hover, and a format badge with an icon (`app/cards.css`).
+- **Clickable `#tags` and `@mentions`** in post text and in the tag row (`components/RichText.js`). The composer preview shows them but keeps them inert.
+- **Media chips**: photo count, video length or YouTube (`components/MediaChip.js`).
+- **Show more** on long text (never on the post's own page).
+- **Polls**: Live / Final results pill, ticking countdown, Leading / Winner / Tied labels and a winner line.
+- **Theories**: verdict chip, read time, show-more and a meter coloured by confidence.
+- **Events**: Today / Tomorrow chip and a "Filling fast" capacity state.
+
+The logic is in `lib/card-helpers.js` (pure, no imports) and tested with `npm test`,
+which runs `tests/card-helpers.test.mjs` under three time zones (the day-label helpers depend on the viewer's zone).
