@@ -1,0 +1,232 @@
+/* =====================================================================
+   Enhancements: loaded last (see app/layout.js).
+   1. Site-wide polish (focus rings, selection, scrollbars, text wrapping,
+      reduced motion, print). Written with :where() so it never overrides a
+      component that already styles itself.
+   2. Styles for the newer pages and widgets: /events, /saved, Trending
+      tags, keyboard shortcuts and the skip link.
+   Colours come from the look variables, so City Look themes keep working.
+   ===================================================================== */
+
+/* ---- 1. Site-wide polish ------------------------------------------------ */
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-hover) transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) { scroll-behavior: smooth; }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent-cyan) 38%, transparent);
+  color: var(--text);
+}
+
+/* A clear keyboard focus ring on anything that has none of its own. */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+}
+:where(a, button, [role="button"]) { -webkit-tap-highlight-color: transparent; }
+
+:where(h1, h2, h3) { text-wrap: balance; }
+:where(p, li) { text-wrap: pretty; }
+
+/* Keep the floating buttons clear of the iPhone home bar. */
+.scroll-top-btn { bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px)); }
+
+/* People who asked their device for less motion get (almost) none. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Nav pills: on a narrow phone the row scrolls sideways by hand (swipe). It
+   never scrolls by itself. Pills keep their full size and icons; on wider
+   screens they all fit and simply share the row. */
+.main-nav {
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  padding-top: 8px; padding-bottom: 16px; /* room for the active pill's glow */
+}
+.main-nav::-webkit-scrollbar { display: none; }
+.nav-link { flex: 1 0 auto; }
+@media (max-width: 350px) { .nav-link svg { display: block; } }
+
+/* Printing a post or event: just the content. */
+@media print {
+  .site-header, .main-nav, .scroll-top-btn, .ai-bubble, .ks-back, .skip-link,
+  .act-bar, .feed-tabs, .ev-search, .ev-tabs, .ev-filters { display: none !important; }
+  body { background: #fff; color: #000; }
+  body::before { display: none; }
+}
+
+/* ---- Skip link ---------------------------------------------------------- */
+
+.skip-link {
+  position: fixed; top: 8px; left: 8px; z-index: 1000;
+  padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 800; text-decoration: none;
+  color: var(--on-accent); background: var(--accent-lime); box-shadow: 0 8px 24px -8px rgba(0, 0, 0, .6);
+  transform: translateY(-160%); transition: transform .18s ease;
+}
+.skip-link:focus { transform: translateY(0); outline: 2px solid var(--text); outline-offset: 2px; }
+main:focus { outline: none; }
+
+/* ---- 2a. Events page (/events) ------------------------------------------ */
+
+.ev-wrap { --a: #ffb02e; --b: #ff3d7f; max-width: 720px; margin: 0 auto; padding: 18px 14px 90px; }
+
+.ev-btn {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 800; text-decoration: none; white-space: nowrap;
+  color: var(--text); border: 1.5px solid var(--border); background: var(--surface);
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.ev-btn:hover { border-color: var(--a); }
+.ev-btn:active { transform: scale(.97); }
+.ev-btn:focus-visible { outline: 2px solid var(--a); outline-offset: 3px; }
+.ev-btn.solid {
+  color: #0d0b10; border-color: transparent; background: linear-gradient(135deg, var(--a), var(--b));
+  box-shadow: 0 10px 26px -12px var(--a);
+}
+.ev-btn.solid:hover { box-shadow: 0 14px 32px -10px var(--a); border-color: transparent; }
+.ev-note { display: block; font-size: 13px; line-height: 1.4; color: var(--text-dim); }
+
+.ev-hero {
+  position: relative; display: grid; gap: 20px; padding: 24px 20px; border-radius: 26px; overflow: hidden;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(420px 220px at 95% 0%, color-mix(in srgb, var(--a) 26%, transparent), transparent 70%),
+    radial-gradient(380px 220px at 0% 110%, color-mix(in srgb, var(--b) 20%, transparent), transparent 70%),
+    var(--surface);
+}
+.ev-hero::after { content: ""; position: absolute; inset: auto 0 0; height: 3px; background: linear-gradient(90deg, var(--a), var(--b)); }
+.ev-hero h1 { font-size: clamp(28px, 7vw, 42px); font-weight: 800; letter-spacing: -1.1px; line-height: 1.04; }
+.ev-hero p { margin-top: 10px; max-width: 48ch; color: var(--text-dim); line-height: 1.55; }
+.ev-hero-actions { margin-top: 18px; }
+.ev-hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ev-hero-stats div { padding: 12px; border-radius: 16px; border: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 60%, transparent); }
+.ev-hero-stats dt { font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.ev-hero-stats dd { margin-top: 2px; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ev-hero-stats dd.hot { color: var(--a); }
+
+.ev-search {
+  display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 5px 5px 5px 16px; border-radius: 999px;
+  background: var(--surface); border: 1.5px solid var(--border); transition: border-color .2s, box-shadow .2s;
+}
+.ev-search:focus-within { border-color: var(--accent-cyan); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-cyan) 15%, transparent); }
+.ev-search > svg { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--text-dim); stroke-width: 2; stroke-linecap: round; }
+.ev-search input { flex: 1; min-width: 0; padding: 10px 0; font: inherit; color: var(--text); background: none; border: 0; outline: none; }
+
+.ev-tabs, .ev-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.ev-tabs::-webkit-scrollbar, .ev-chips::-webkit-scrollbar { display: none; }
+.ev-tabs { margin-top: 14px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); }
+.ev-tabs a {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+  font-size: 13.5px; font-weight: 700; text-decoration: none; color: var(--text-dim); transition: color .15s, background .15s;
+}
+.ev-tabs a:hover { color: var(--text); }
+.ev-tabs a.on { color: var(--on-accent); background: var(--text); }
+.ev-tabs a em { font-style: normal; font-size: 11.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px; background: color-mix(in srgb, currentColor 14%, transparent); }
+
+.ev-filters { display: grid; gap: 8px; margin-top: 12px; }
+.ev-chips a {
+  flex: none; padding: 7px 13px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none;
+  color: var(--text-dim); background: var(--surface); border: 1.5px solid var(--border); transition: border-color .15s, color .15s;
+}
+.ev-chips a:hover { color: var(--text); border-color: var(--a); }
+.ev-chips a.on { color: #0d0b10; border-color: transparent; background: linear-gradient(135deg, var(--a), var(--b)); }
+
+.ev-result-line { margin: 14px 4px 0; font-size: 13.5px; color: var(--text-dim); }
+.ev-result-line a { margin-left: 6px; color: var(--accent-cyan); font-weight: 700; }
+.ev-wrap .feed { margin-top: 16px; }
+.ev-empty { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+@media (min-width: 640px) {
+  .ev-hero { grid-template-columns: 1.3fr 1fr; align-items: end; padding: 30px 28px; }
+}
+@media (max-width: 600px) {
+  .ev-wrap .feed > .post { border-radius: 0; border-left: none; border-right: none; margin-inline: -14px; }
+}
+
+/* ---- 2b. Saved posts (/saved) ------------------------------------------- */
+
+.sv-head h1 { font-size: clamp(26px, 6vw, 34px); font-weight: 800; letter-spacing: -.8px; }
+.sv-head p { margin-top: 6px; color: var(--text-dim); line-height: 1.5; }
+.sv-head { padding: 0 20px 6px; }
+.sv-count { margin: 14px 20px 4px; font-size: 13px; font-weight: 700; color: var(--text-dim); }
+@media (min-width: 601px) { .sv-head, .sv-count { padding-left: 4px; padding-right: 4px; margin-left: 0; margin-right: 0; } }
+
+/* ---- 2c. Trending tags (home feed) -------------------------------------- */
+
+.tt { margin: 14px 14px 0; padding: 12px 14px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--lp-line, var(--border)); }
+.tt-h { font-size: 15px; font-weight: 800; line-height: 1.2; }
+.tt-list { display: flex; gap: 8px; margin-top: 10px; padding: 0 0 2px; list-style: none; overflow-x: auto; scrollbar-width: none; }
+.tt-list::-webkit-scrollbar { display: none; }
+.tt-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; white-space: nowrap;
+  font-size: 13.5px; font-weight: 700; text-decoration: none; color: var(--text);
+  background: var(--surface-raised); border: 1px solid var(--border); transition: border-color .15s, background .15s;
+}
+.tt-chip em { font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--text-dim); }
+.tt-chip:hover { border-color: var(--accent-cyan); background: var(--surface-hover); }
+
+/* ---- 2d. Keyboard shortcuts sheet --------------------------------------- */
+
+.ks-back {
+  position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; padding: 16px;
+  background: rgba(8, 6, 14, .66); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  animation: ks-fade .16s ease;
+}
+.ks {
+  width: min(420px, 100%); max-height: calc(100dvh - 32px); overflow: auto; padding: 18px 18px 16px; border-radius: 22px;
+  color: var(--text); background: var(--surface); border: 1px solid var(--border); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .7);
+  animation: ks-pop .2s cubic-bezier(.3, 1.3, .5, 1);
+}
+.ks-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ks-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+.ks-x {
+  all: unset; box-sizing: border-box; cursor: pointer; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
+  color: var(--text-dim); background: var(--surface-raised);
+}
+.ks-x:hover { color: var(--text); background: var(--surface-hover); }
+.ks-x:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.ks-list { display: grid; margin-top: 12px; list-style: none; }
+.ks-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+.ks-list li:last-child { border-bottom: 0; }
+.ks-keys { display: inline-flex; align-items: center; gap: 6px; }
+.ks-keys > span { display: inline-flex; align-items: center; gap: 6px; }
+.ks-keys small { font-size: 11.5px; color: var(--text-dim); }
+.ks kbd {
+  min-width: 28px; padding: 3px 8px; text-align: center; font: 700 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text); background: var(--surface-raised); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 8px;
+}
+.ks-foot { margin-top: 10px; font-size: 12.5px; color: var(--text-dim); }
+@keyframes ks-fade { from { opacity: 0; } }
+@keyframes ks-pop { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+
+/* ---- Phone fix: never let the page be wider than the screen ---------------
+   If any element sticks out sideways, Android Chrome shrinks the whole page to
+   fit it, which shows as a narrow feed with an empty strip on the right.
+   `clip` (unlike `hidden`) doesn't create a scroll container, so the sticky
+   header and nav keep working. Wide rows (nav pills, tags, tables) still
+   scroll inside their own boxes. */
+html, body { max-width: 100%; overflow-x: clip; }
+.page-content { max-width: min(640px, 100%); overflow-x: clip; }
+.lp-banner img, .post img, .post video { max-width: 100%; }
+
+/* ---- Event card: keep long text, chips and buttons inside the card ---------
+   A long unbroken word or link in any event field (category, platform, venue,
+   guest name...) can push the card wider than the phone. */
+.evc { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.evc-top, .evc-when, .evc-block, .evc-count, .evc-actions, .evc-main, .evc-cd, .evc-people { min-width: 0; max-width: 100%; }
+.evc-when b, .evc-cat, .evc-soon, .evc-chips li, .evc-state, .evc-host, .evc-ext, .evc-maps a, .evc-ics { max-width: 100%; overflow-wrap: anywhere; }
+.evc-cd-boxes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.evc-btn { min-width: min(150px, 100%); max-width: 100%; }
+.evc-people li { flex-wrap: wrap; min-width: 0; }
+.evc-map { max-width: 100%; }
