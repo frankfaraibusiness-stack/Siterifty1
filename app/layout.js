@@ -45,6 +45,10 @@ export const metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  // Stops Android Chrome from auto-zooming the page out to fit a too-wide
+  // element (that is what left the feed in a narrow column with an empty strip
+  // on the right). Pinch-to-zoom IN still works.
+  minimumScale: 1,
   interactiveWidget: "resizes-content",
 };
 

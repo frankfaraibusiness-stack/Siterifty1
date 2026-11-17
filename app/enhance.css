@@ -209,3 +209,24 @@ main:focus { outline: none; }
 .ks-foot { margin-top: 10px; font-size: 12.5px; color: var(--text-dim); }
 @keyframes ks-fade { from { opacity: 0; } }
 @keyframes ks-pop { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+
+/* ---- Phone fix: never let the page be wider than the screen ---------------
+   If any element sticks out sideways, Android Chrome shrinks the whole page to
+   fit it, which shows as a narrow feed with an empty strip on the right.
+   `clip` (unlike `hidden`) doesn't create a scroll container, so the sticky
+   header and nav keep working. Wide rows (nav pills, tags, tables) still
+   scroll inside their own boxes. */
+html, body { max-width: 100%; overflow-x: clip; }
+.page-content { max-width: min(640px, 100%); overflow-x: clip; }
+.lp-banner img, .post img, .post video { max-width: 100%; }
+
+/* ---- Event card: keep long text, chips and buttons inside the card ---------
+   A long unbroken word or link in any event field (category, platform, venue,
+   guest name...) can push the card wider than the phone. */
+.evc { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.evc-top, .evc-when, .evc-block, .evc-count, .evc-actions, .evc-main, .evc-cd, .evc-people { min-width: 0; max-width: 100%; }
+.evc-when b, .evc-cat, .evc-soon, .evc-chips li, .evc-state, .evc-host, .evc-ext, .evc-maps a, .evc-ics { max-width: 100%; overflow-wrap: anywhere; }
+.evc-cd-boxes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.evc-btn { min-width: min(150px, 100%); max-width: 100%; }
+.evc-people li { flex-wrap: wrap; min-width: 0; }
+.evc-map { max-width: 100%; }
