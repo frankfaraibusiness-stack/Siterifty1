@@ -1,4 +1,4 @@
-# GTA6FanBase
+# GTAFanbase
 
 A fan social-feed UI for the world of GTA6 / Leonida, built with Next.js 16 (App Router) and React 19.
 
