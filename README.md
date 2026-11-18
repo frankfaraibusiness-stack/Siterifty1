@@ -325,6 +325,20 @@ The three cosmetic perks (Supporter Badge, Gradient Name, Halo Avatar) are visib
 
 No payment is connected yet. While `PERKS_FREE_WHILE_TESTING` is `true` in `lib/perks.js`, "Get" unlocks the perk for $0. Set it to `false` and `app/api/perks/route.js` refuses paid perks (HTTP 402) until you add the checkout step there.
 
+## Gift Shop (`/gifts`) and the wallet
+
+Members send each other gifts, paid from a **wallet** (never a card). Real pages (not a modal), server-rendered so search engines see every gift: `/gifts` (catalog with search, game / type / rarity filters and sort) and `/gifts/{id}` (the step-by-step checkout: **Gift, Recipient, Review, Sent**). The header on these pages swaps the right side for **Return home**, with the centred wallet balance under it.
+
+- **Catalog:** `lib/gifts.js` (about 150 gifts, GTA 1 to GTA VI plus fan favourites, each with its own USD price; rarity comes from the price). Add a row to add a gift. Shop grid: 4 per row on desktop, 2 per row on phones (even at 320px). The Perks Shop uses the same 4 / 2 layout.
+- **Where a gift is going is kept:** Gift links on a comment, the post "..." menu and a profile open the shop with `?to=handle&ctx=comment|post|profile&post=ID&c=ID`. The destination stays through browsing and checkout. From the menu (`ctx=shop`) the sender types a handle (looked up live on the server).
+- **Fees (shown in the checkout and charged by the server):** gift price + fixed **$0.10** + **5% of the gift price**. All money is whole **mills** ($0.001), so the wallet shows `$0.000`.
+- **Server side only:** `POST /api/gifts` takes just a gift id, the destination, a note and an idempotency key. `lib/gifts-data.js` looks the price up itself, works out the receiver from the comment / post in the database, checks blocks and self-gifting, and charges the wallet in a Firestore transaction (a retried request is never charged twice; not enough balance gives HTTP 402).
+- **Firestore:** `users/{uid}.walletMills` (integer; missing = $0.000, **no top-up page yet**, so set it in the Firestore console to test), `giftsSent` / `giftsReceived` counters, `gifts/{uid}_{requestId}` (full record incl. price breakdown and source), `wallet_ledger/{same id}`, `users/{toUid}/gifts_received/{id}` (shown on the profile), `giftCount` on the comment / post it came from.
+- **Gifts in the comments:** a gift sent from a comment shows right under that comment (who sent it, the gift, their message); a gift sent from a post shows in a "Gifts for this post" strip at the top of the comments sheet. They are saved as a public copy at `posts/{postId}/gifts/{id}` (no money details) and returned by `GET /api/posts/comments` as `gifts`. Gifts from blocked members are hidden like their comments. Because the message is public there, the checkout says so.
+- **Default message:** a gift sent with no message still shows a friendly line in the comments and on the profile, picked from the gift's type (`giftMessage` in `lib/gifts.js`) and always the same for the same gift. The stored message stays empty, so older gifts get one too.
+- **Animations:** every gift has its own idle motion plus a hover / tap burst (24 idle and 8 hover styles in `app/gifts.css`, themed: cars slide, helicopters fly, fire flickers, cash drops). `lib/gifts.js` hands each gift a unique idle + hover pair and its own speed, and `tests/gifts.test.mjs` fails if two gifts ever share a pair (room for 192 gifts). Epic gifts get a shimmer sweep; Legendary and Mythic also get a glowing aura. The same motion plays in the shop, checkout, comments and profile, and stops for people who prefer reduced motion.
+- **Reuse later:** `kind` on each gift (`GIFT_KINDS`) is where perks or badges can be added; the page, checkout and API stay the same.
+
 ## Leonida World Hub (`/world`)
 
 A GTA 6-only interactive community area linked from the main navigation and side menu. The hub includes:
@@ -344,7 +358,7 @@ All hub submissions are stored in `gta6World/{itemId}` with a `type` of `locatio
 - **Follow** – `POST /api/social/follow { username, follow }`, stored in `follows/{fromUid}_{toUid}`.
 - **Friends** – `POST /api/social/friend { username, action }` with `request | cancel | accept | decline | remove`, stored in `friendships/{uidA}_{uidB}` (`status: pending | accepted`). Incoming requests show on your own profile under "Friend requests".
 - **Following feed** – the home page has a "For you / Following" switch (`/?feed=following`) for signed-in members.
-- **Profile cards** – Posts / Likes / Comments / Saves are collapsed dropdowns (`components/ProfileStats.js`).
+- **Profile stats** – Posts / Likes / Comments / Saves now live in the profile's About tab (see "Profile page" below).
 - Styles for all of the above are in `app/social.css`. None of the new queries need a composite Firestore index.
 
 ### More small features
@@ -430,3 +444,50 @@ New polls never expire unless the author picks a length (`POLL_LENGTHS` in `lib/
 ## Community page layout
 
 On a community's page the posts and the community's own information are kept apart. The posts sit in a framed box that scrolls on its own (`components/communities/CommunityFeed.js`), under a compact composer that opens when you click it, so the page stays short however many posts there are; a "Back to top" button appears inside the box. Posts load 20 at a time (`fetchCommunityPosts` in `lib/community-data.js`): the next page loads when you reach the end of the box, from `GET /api/communities/posts` (public communities for anyone, private ones for members only). Pinned posts always come first. About, what's allowed and the rules are one info panel: a sidebar on wide screens, and one folded "About & rules" bar above the feed on phones. The About tab shows the same information in full.
+
+## Ads (`/advertise`)
+
+Self-serve ads: advertisers create image or video ads, pay once for a budget, and the ads serve to live traffic.
+
+- **Where they show:** home feed and community feeds (full card after every 4 to 5 posts), chats (compact row after every 5 messages). Each slot fetches ONE random ad via `GET /api/ads/serve`, only when it is about to scroll into view.
+- **Pricing** lives in `lib/ads.js`: image $2 / 1k views + ($0.18 + 5%) tax; video $5 / 1k views + (10% + $0.50) fees; video max 30 s. Server and browser use the same `quote()`.
+- **Payments:** `ADS_FREE_WHILE_TESTING` (lib/ads.js) is `true`, so launching and topping up record a TEST order and charge nothing. Set it to `false` and `/api/ads` refuses to launch or top up (402) until you add a payment step in `lib/ads-data.js` (`paymentGate`).
+- **Tracking:** a view = 50% of the ad on screen for 1 s; counted once per slot, only while the ad has balance (never over-delivers). Clicks are tracked, not billed. Owners' own views/clicks are ignored. Counters are split by source (`feed` | `community` | `messages`) and by UTC day.
+- **Firestore:** `ads/{id}` (+ `ads/{id}/media/0` for uploaded images / video posters), `adIndex/live` (ids that can serve per placement, cached 30 s), `adOrders/{id}`. Video files go to Storage at `ad-videos/{uid}/{adId}` (needs the same bucket + CORS as post videos). No composite indexes are needed.
+- **Not built yet:** ad review/moderation, refunds, real checkout, per-user rate limits on ad creation.
+
+## Post analytics and recommendations (all decided on the server)
+
+**Tracking.** The browser can't report views, clicks, hashtags or sources. When the server serves a post in a list (home feed, Following, Saved, Events, the recommendation row, "More to explore") it signs a token (`lib/track-token.js`) that says exactly which post, which surface, to whom, and the post's fingerprint. The browser can only hand tokens back to `POST /api/posts/track`; the server re-checks every signature (edited, forged, expired, other-member and own-post tokens are all refused) and does all counting. Posts the server never sent can't be counted.
+- **view** = the token's post was on screen for 1 s (bounded by what the server really sent), once per member/post/surface per 10 min; or a real browser opening `/p/{id}` directly (shared link, bookmark, refresh), counted by the post page itself (`sec-fetch-*` headers; crawlers, link previews, prefetches and in-app navigation don't count).
+- **click** = the member opened the post from a list.
+- Stored in `postStats/{postId}`: `views`, `clicks`, `vSrc` / `cSrc` per surface (`feed`, `following`, `recommend`, `postrec`, `saved`, `events`, `direct`) and `days.dYYYYMMDD.{v,c}` per UTC day. CTR = clicks / views, overall or per surface. No dashboard yet. One write per post per request, no reads.
+- Dedupe and the per-minute cap live in server memory, so they are per instance (best effort on serverless). A shared store (Redis/Upstash) would make them exact.
+
+**Interests.** `interests/{uid}` keeps counters for hashtags (`t`), game (`g`: gta6, gta5, gta4, San Andreas, ...), post type (`ty`) and authors (`au`). Written only by the server, from the post it loaded, with plain increments (one write, no read): like +3, save +3, comment +4, open +1 (also a direct visit). Entries fade with a 21-day half-life without any cleanup job (`lib/interests.js`).
+
+**Recommendations** (`lib/recommend-data.js`, `lib/interests.js`). The member's profile (1 read) is matched against a shared pool of the newest 90 posts (cached 2 min for everybody), mixed with freshness and popularity; new members get trending. Every 4th slot is deliberately outside their taste, max 2 posts per author. Used by the "Recommended for you" row above the feed tabs and by "More to explore" under a post (ranked first, then newest-first).
+
+## The Lobby (`/lobby`)
+
+A live hangout for signed-in members, themed like a GTA Online lobby. Everything is polling over the existing Admin-SDK stack (no websockets, no new services, no composite indexes).
+
+- **Who's here**: members check in every 15s while the page is open (`lobbyPresence/{uid}`); a check-in older than 45s drops off the list. Members with "Show when I'm online" or "Discoverable" off are counted but never listed. Blocked members never see each other. Each member picks a status (Cruising, Looking for crew, Watching trailers, Theorycrafting, Laying low).
+- **Rooms**: six official rooms (defined in `lib/lobby-config.js`, `OFFICIAL_ROOMS`) plus member-run **sessions** (`lobbyRooms/{id}`). Chat is `lobbyRooms/{id}/messages`, fetched every 3s with a `since` cursor; your own message shows instantly. Authors and session hosts can remove messages; hosts can close a session. Sessions disappear after 6 quiet hours, chat older than 48h is purged lazily.
+- **Plans**: how many sessions a member can run at once and how big they can be comes from `SESSION_RULES` in `lib/lobby-config.js` (Drifter 1 x 10 people ... Kingpin 5 x 50).
+- **Crew finder**: one post per member (`lobbyCrew/{uid}`), platform / playstyle / region / crew size / note, lasts 48h. Others can filter, **Wave** (toggle) or Message. The poster sees who waved on their own card.
+- **Starting soon**: events that are live or start within 3 days, from the existing events data.
+
+Files: `lib/lobby-config.js` (shared rules, tested in `tests/lobby.test.mjs`), `lib/lobby-data.js` (Firestore), `app/api/lobby/route.js` (one route: `GET` live / chat, `POST` actions), `app/lobby/*`, `components/lobby/*`.
+
+Known limits: a removed message disappears for the others only when they reopen the room (polling only fetches newer messages). Presence and chat reads scale with people online, so if the lobby gets busy, swap polling for Firestore listeners or a realtime service behind the same API.
+
+## Profile page (`/u/[username]`)
+
+A short header and one tab per kind of post. The header is the banner, name, actions, follower counts and a one-line bio; tapping the bio opens the **About** tab (bio with Read more, post / like / comment / save totals, top posts, joined / location / website). Under it the tabs are **Posts, Videos, Polls, Theories, Events, About**, each with a count and its own card design (`components/profile/Tiles.js`): photo cards, 16:9 video cards, live polls you can vote on, theory cards with the author's confidence, event cards with a date block and who is going.
+
+- The open tab is kept in the URL (`?tab=videos`), so Back from a post returns to it.
+- A card opens the post's own page (`/p/[id]`, server-rendered with a canonical URL), not a popup. That page has a sticky bar with Back, the post type and the author (`components/post/PostBar.js`).
+- Spoiler posts are blurred in the cards; pinned, scheduled and private posts are labelled (for the owner).
+- On your own profile, Upgrade, Settings and Log out live in a small "..." menu.
+- Files: `components/ProfileView.js` (header + tab state), `components/profile/*`, `app/profile.css`.
