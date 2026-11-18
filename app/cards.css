@@ -1,0 +1,193 @@
+/* ==========================================================================
+   Feed cards: typed-card styling, clickable tags and @mentions, media chips,
+   show-more, and the poll, theory and event extras.
+   Typed posts set --a / --b on the card (see PostCard); the plain photo post
+   only borrows its pair for the badge.
+   ========================================================================== */
+
+/* ---- Typed cards: a soft wash of the format colour and a matching hover ---- */
+.post-typed {
+  background-image:
+    linear-gradient(180deg, color-mix(in srgb, var(--a) 9%, transparent), transparent 170px),
+    linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0) 40%);
+}
+@media (hover: hover) {
+  .post-typed:hover {
+    border-color: color-mix(in srgb, var(--a) 45%, var(--border));
+    box-shadow: inset 0 2px 0 0 var(--a), 0 18px 38px -22px color-mix(in srgb, var(--a) 70%, transparent);
+  }
+  .post-typed:hover::before { background: linear-gradient(135deg, var(--a), var(--b)); }
+}
+
+/* ---- Format badge (icon + label) ---- */
+.post-type { display: inline-flex; align-items: center; gap: 5px; }
+.post-type svg { flex: none; }
+.post[data-type="post"] .post-type { --a: #ff3d7f; --b: #ff9a3d; }
+
+/* ---- Clickable @mentions and #tags ---- */
+.rt-mention, .rt-tag { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.rt-mention { color: var(--accent-pink); }
+.rt-tag { color: var(--accent-cyan); }
+a.rt-mention:hover, a.rt-tag:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.tag-list { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0 16px 12px; }
+.tag-chip {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+  color: var(--accent-cyan); text-decoration: none;
+  background: color-mix(in srgb, var(--accent-cyan) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 22%, transparent);
+  transition: background .15s ease, border-color .15s ease;
+}
+a.tag-chip:hover { background: color-mix(in srgb, var(--accent-cyan) 18%, transparent); border-color: var(--accent-cyan); }
+.evc .tag-list { padding: 0; margin-top: 10px; }
+
+/* ---- Show more ---- */
+.rt-clamp {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--rt-lines, 4); overflow: hidden;
+}
+/* Padding would let the next line peek through, so the gap becomes a margin. */
+.post-text.rt-clamp { padding-bottom: 0; margin-bottom: 8px; }
+.rt-more {
+  all: unset; box-sizing: border-box; display: block; cursor: pointer; margin: -4px 16px 12px; padding: 4px 0;
+  font-size: 13px; font-weight: 700; color: var(--a, var(--accent-cyan));
+}
+.rt-more:hover { text-decoration: underline; text-underline-offset: 2px; }
+.rt-more:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; border-radius: 4px; }
+.theory .rt-more { margin: 6px 0 0; }
+.theory .theory-text.rt-clamp { white-space: pre-wrap; }
+
+/* ---- Media chip ---- */
+.media-chip {
+  position: absolute; top: 10px; left: 10px; z-index: 2; pointer-events: none;
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 800; letter-spacing: .1px; color: #fff; font-variant-numeric: tabular-nums;
+  background: rgba(13, 11, 16, .72); border: 1px solid rgba(255, 255, 255, .14);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+
+/* ---- Poll ---- */
+.poll-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.poll-status {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px;
+  color: var(--a, var(--accent-cyan)); background: color-mix(in srgb, var(--a, var(--accent-cyan)) 12%, transparent);
+}
+.poll-status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: poll-pulse 1.6s ease-in-out infinite; }
+.poll-status.ended { color: var(--text-dim); background: rgba(255, 255, 255, .06); }
+.poll-status.ended i { animation: none; opacity: .6; }
+@keyframes poll-pulse { 50% { opacity: .35; transform: scale(.75); } }
+.poll-left { margin-left: auto; font-variant-numeric: tabular-nums; }
+.poll-left ~ .poll-left { margin-left: 0; }
+.poll-hint { margin: 10px 0 0; font-size: 12.5px; color: var(--text-dim); }
+.poll-tag {
+  font-style: normal; margin-left: 8px; padding: 2px 7px; border-radius: 999px; vertical-align: 1px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  color: #0d0b10; background: var(--a, var(--accent-cyan));
+}
+.poll-winner {
+  margin-top: 10px; padding: 9px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; overflow-wrap: anywhere;
+  background: color-mix(in srgb, var(--a, var(--accent-cyan)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--a, var(--accent-cyan)) 28%, transparent);
+}
+
+/* ---- Theory ---- */
+.theory-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.theory-chip {
+  padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; color: var(--text-dim);
+  background: rgba(255, 255, 255, .06); border: 1px solid var(--border);
+}
+.verdict-chip { color: #0d0b10; border-color: transparent; }
+/* Same colours as the meter's track, so the chip and the marker agree. */
+.verdict-chip[data-tone="cap"] { background: var(--accent-cyan); }
+.verdict-chip[data-tone="maybe"] { background: var(--accent-lime); }
+.verdict-chip[data-tone="likely"] { background: #ff9a3d; }
+.verdict-chip[data-tone="locked"] { background: var(--accent-pink); }
+.theory-meter[data-tone="cap"] { --tone: var(--accent-cyan); }
+.theory-meter[data-tone="maybe"] { --tone: var(--accent-lime); }
+.theory-meter[data-tone="likely"] { --tone: #ff9a3d; }
+.theory-meter[data-tone="locked"] { --tone: var(--accent-pink); }
+.theory-meter .theory-track i { box-shadow: 0 0 0 2px var(--tone, var(--a)), 0 0 12px -2px var(--tone, var(--a)); }
+.theory-meta b { color: var(--tone, var(--text)); font-variant-numeric: tabular-nums; }
+
+/* ---- Event ---- */
+.evc-soon {
+  align-self: flex-start; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 800;
+  color: var(--a); background: color-mix(in srgb, var(--a) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--a) 35%, transparent);
+}
+.evc-cat + .evc-soon { margin-top: 1px; }
+.evc-left[data-tone="filling"] { color: #ff9a3d; }
+.evc-left[data-tone="full"] { color: var(--accent-pink); }
+.evc-bar[data-tone="filling"] i { background: linear-gradient(90deg, var(--a), #ff9a3d); }
+.evc-bar[data-tone="full"] i { background: var(--accent-pink); }
+
+@media (prefers-reduced-motion: reduce) { .poll-status i { animation: none; } }
+
+/* ---- Post page: comment preview (the full sheet is CommentsSheet) ---- */
+.cpv { padding: 16px 16px 18px; border-top: 1px solid var(--border); }
+.cpv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.cpv-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; letter-spacing: .1px; }
+.cpv-count {
+  min-width: 24px; padding: 2px 8px; border-radius: 999px; text-align: center; font-size: 12px; font-weight: 800;
+  font-variant-numeric: tabular-nums; color: var(--text-dim); background: rgba(255, 255, 255, .07);
+}
+.cpv-all, .cpv-more { all: unset; box-sizing: border-box; cursor: pointer; font-weight: 800; color: var(--accent-cyan); }
+.cpv-all { font-size: 13.5px; padding: 4px 2px; }
+.cpv-all:hover, .cpv-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cpv-all:focus-visible, .cpv-more:focus-visible, .cpv-compose:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; border-radius: 8px; }
+
+.cpv-list { list-style: none; margin: 0; padding: 0; }
+.cpv-item { display: flex; align-items: flex-start; gap: 11px; padding: 11px 0; }
+.cpv-item + .cpv-item { border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+
+.cpv-avatar {
+  position: relative; flex: none; width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center; font-size: 13.5px; font-weight: 800; color: #fff; text-decoration: none;
+  background: linear-gradient(135deg, var(--a, #3a3550), var(--b, #2f2b41)); box-shadow: 0 0 0 2px var(--surface);
+}
+.cpv-avatar-sm { width: 30px; height: 30px; font-size: 12.5px; }
+.cpv-avatar-img { position: absolute; inset: 0; background: center / cover no-repeat; }
+
+.cpv-body { flex: 1; min-width: 0; }
+.cpv-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 12.5px; }
+.cpv-user { font-size: 13.5px; font-weight: 800; color: var(--text); text-decoration: none; }
+.cpv-user:hover { text-decoration: underline; }
+.cpv-time { color: var(--text-dim); }
+.cpv-pin {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: #ffd36b;
+  padding: 2px 7px; border-radius: 999px; background: rgba(255, 211, 107, .12);
+}
+.cpv-text {
+  margin: 3px 0 0; font-size: 14.5px; line-height: 1.45; color: #e6e0ee; overflow-wrap: anywhere; white-space: pre-line;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
+}
+.cpv-foot { display: flex; align-items: center; gap: 14px; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--text-dim); }
+.cpv-like { display: inline-flex; align-items: center; gap: 5px; }
+.cpv-like svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cpv-like.on { color: var(--accent-pink); }
+.cpv-like.on svg { fill: currentColor; }
+
+.cpv-more { display: block; margin: 2px 0 6px; padding: 8px 0; font-size: 14px; }
+.cpv-note { margin: 10px 0; font-size: 13.5px; color: var(--text-dim); }
+
+.cpv-empty { display: flex; align-items: center; gap: 12px; padding: 14px 0 10px; color: var(--text-dim); font-size: 14px; }
+.cpv-empty p { margin: 0; }
+.cpv-empty-icon {
+  display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%;
+  color: var(--accent-cyan); background: color-mix(in srgb, var(--accent-cyan) 10%, transparent);
+}
+.cpv-empty-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.cpv-compose {
+  all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%;
+  margin-top: 8px; padding: 6px 16px 6px 6px; border-radius: 999px; background: var(--bg); border: 1.5px solid var(--border);
+  transition: border-color .15s ease, background .15s ease;
+}
+.cpv-compose:hover { border-color: var(--accent-cyan); }
+.cpv-compose-text { font-size: 14px; color: var(--text-dim); }
+
+.cpv-skel .cpv-avatar { background: rgba(255, 255, 255, .08); box-shadow: none; }
+.cpv-skel-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.cpv-skel-lines i { display: block; height: 10px; width: 85%; border-radius: 6px; background: rgba(255, 255, 255, .08); animation: cpv-shimmer 1.4s ease-in-out infinite; }
+.cpv-skel-lines i + i { width: 55%; }
+@keyframes cpv-shimmer { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .cpv-skel-lines i { animation: none; } }
