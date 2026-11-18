@@ -1,0 +1,130 @@
+/* Comment replies, follow / friend buttons, and the collapsible profile cards */
+
+/* ---- Replies ---- */
+.cm-replies { margin: 4px 0 0; padding: 0; }
+.cm-item.cm-reply { padding: 8px 0; }
+.cm-reply .cm-avatar { width: 28px; height: 28px; font-size: 12px; }
+.cm-reply .cm-text { font-size: 14px; }
+.cm-mention { margin-right: 2px; font-weight: 700; color: var(--accent-cyan); text-decoration: none; }
+.cm-mention:hover { text-decoration: underline; }
+
+.cm-thread-btn {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; padding: 0;
+  font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--text-dim);
+  background: none; border: none; cursor: pointer;
+}
+.cm-thread-btn:hover { color: var(--text); }
+.cm-thread-btn em { font-style: normal; font-weight: 600; }
+.cm-thread-line { width: 22px; height: 1px; background: var(--border); }
+
+.cm-replying {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 7px 16px; font-size: 12.5px; color: var(--text-dim);
+  border-top: 1px solid var(--border); background: rgba(var(--bg-rgb), .8);
+}
+.cm-replying b { color: var(--text); }
+.cm-replying-x {
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  color: var(--text-dim); background: rgba(255,255,255,.06); border: none; cursor: pointer;
+}
+.cm-replying-x:hover { color: var(--text); }
+.cm-replying-x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cm-replying + .cm-composer { border-top: none; }
+
+/* ---- Follow / friend buttons ---- */
+.pf-actions { flex-wrap: wrap; }
+.pf-btn-on { color: var(--accent-lime); border-color: color-mix(in srgb, var(--accent-lime) 45%, var(--border)); }
+.pf-btn-danger { color: #ff6b99; border-color: color-mix(in srgb, var(--accent-pink) 55%, var(--border)); }
+.pf-btn-icon { padding: 10px 12px; }
+.pf-btn-sm { padding: 7px 13px; font-size: 13px; }
+.pf-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+
+.pf-social { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 14px; font-size: 14px; color: var(--text-dim); }
+.pf-social b { color: var(--text); font-weight: 800; }
+
+/* Friend requests (own profile) */
+.pf-reqs { margin-top: 16px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); overflow: hidden; }
+.pf-reqs-head {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 12px 16px;
+  font-family: inherit; font-size: 14px; font-weight: 800; color: var(--text);
+  background: none; border: none; cursor: pointer; text-align: left;
+}
+.pf-reqs-n {
+  margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 999px; text-align: center;
+  font-size: 12px; font-weight: 800; color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2));
+}
+.pf-reqs-list { list-style: none; margin: 0; padding: 0 12px 10px; }
+.pf-reqs-list li { display: flex; align-items: center; gap: 8px; padding: 8px 4px; border-top: 1px solid var(--border); }
+.pf-reqs-who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; }
+.pf-reqs-av {
+  position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center; font-size: 14px; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--a), var(--b));
+}
+.pf-reqs-img { position: absolute; inset: 0; background: center / cover no-repeat; }
+.pf-reqs-name { min-width: 0; display: flex; flex-direction: column; }
+.pf-reqs-name b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-reqs-name small { font-size: 12px; color: var(--text-dim); }
+
+@media (max-width: 700px) {
+  .pf-actions .pf-btn-icon { flex: 0 0 auto; }
+  .pf-reqs-list li { flex-wrap: wrap; }
+  .pf-reqs-who { flex-basis: 100%; }
+}
+
+/* ---- Post header: avatar + name open the profile ---- */
+.post-avatar-link { display: flex; flex: none; border-radius: 50%; color: inherit; text-decoration: none; }
+.post-avatar-link:focus-visible, .post-user-link:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.post-user-link { color: inherit; text-decoration: none; }
+.post-user-link:hover { text-decoration: underline; }
+
+/* ---- Feed tabs: For you / Following ---- */
+.feed-tabs { display: flex; gap: 6px; margin: 14px 14px 4px; padding: 4px; width: fit-content; border-radius: 999px; background: rgba(255,255,255,.05); }
+.feed-tab {
+  padding: 7px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 800; color: var(--text-dim);
+  text-decoration: none; transition: color .2s ease, background .2s ease;
+}
+.feed-tab:hover { color: var(--text); }
+.feed-tab.active { color: var(--on-accent); background: var(--text); }
+.feed-tab:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.feed-note-empty { margin-top: 18px; text-align: center; }
+
+/* ---- More comment touches: edit, read more, author heart ---- */
+.cm-edit { margin-top: 6px; }
+.cm-edit .cm-input { width: 100%; resize: vertical; min-height: 64px; }
+.cm-edit-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.cm-edited { font-style: normal; }
+.cm-more { padding: 0; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--accent-cyan); background: none; border: none; cursor: pointer; }
+.cm-more:hover { text-decoration: underline; }
+.cm-byauthor {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+  color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 12%, transparent);
+}
+.cm-byauthor svg { width: 11px; height: 11px; fill: currentColor; stroke: currentColor; stroke-width: 2; }
+
+/* ---- "Follows you" chip + people lists ---- */
+.pf-follows-you {
+  margin-left: 8px; padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+  font-size: 11px; font-weight: 800; letter-spacing: .3px; color: var(--text-dim);
+  background: rgba(255,255,255,.07);
+}
+.pf-social-btn { padding: 0; font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+.pf-social-btn:hover { color: var(--text); text-decoration: underline; }
+.pf-social-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; border-radius: 4px; }
+
+.pl-overlay { position: fixed; inset: 0; z-index: 250; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(8,6,12,.7); backdrop-filter: blur(6px); }
+.pl-dialog { width: min(420px, 100%); max-height: min(560px, 80vh); display: flex; flex-direction: column; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 30px 80px rgba(0,0,0,.6); overflow: hidden; }
+.pl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 14px 12px 18px; border-bottom: 1px solid var(--border); }
+.pl-head h2 { font-size: 17px; font-weight: 800; }
+.pl-head h2 em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--text-dim); margin-left: 4px; }
+.pl-body { overflow-y: auto; overscroll-behavior: contain; padding: 6px 14px 12px; }
+.pl-list { list-style: none; margin: 0; padding: 0; }
+.pl-list li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.pl-list li:last-child { border-bottom: none; }
+.pl-note { padding: 28px 8px; text-align: center; font-size: 14px; color: var(--text-dim); }
+@media (max-width: 640px) {
+  .pl-overlay { align-items: flex-end; padding: 0; }
+  .pl-dialog { width: 100%; max-height: 80vh; border-radius: 20px 20px 0 0; }
+}
