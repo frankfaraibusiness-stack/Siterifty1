@@ -2,6 +2,7 @@ import Link from "next/link";
 import SiteHeaderClient from "@/components/SiteHeaderClient";
 import MainNav from "@/components/MainNav";
 import ScrollTopButton from "@/components/ScrollTopButton";
+import Discover from "@/components/Discover";
 import CommunityCard from "@/components/communities/CommunityCard";
 import JoinButton from "@/components/communities/JoinButton";
 import { CommunityIcon } from "@/components/communities/CommunityArt";
@@ -135,6 +136,8 @@ export default async function CommunitiesPage({ searchParams }) {
             </div>
           )}
         </section>
+
+        <Discover spot="communities" variant="tiles" className="dc-foot" title="More from GTAFanbase" />
       </main>
       <ScrollTopButton />
     </>

@@ -244,15 +244,6 @@
 .st-pv-like { padding: 7px 13px; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent); }
 .st-pv-cta { padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--on-accent); background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2)); box-shadow: 0 0 18px color-mix(in srgb, var(--accent-lime) 40%, transparent); }
 
-/* ---------- toast ---------- */
-.st-toast {
-  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 300; transform: translateX(-50%);
-  max-width: min(92vw, 420px); padding: 12px 20px; border-radius: 999px; font-size: 14px; font-weight: 700; text-align: center;
-  color: var(--on-accent); background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2)); box-shadow: 0 16px 40px -12px rgba(0, 0, 0, .7);
-  animation: st-pop .25s cubic-bezier(.34, 1.56, .64, 1);
-}
-.st-toast.bad { color: #fff; background: #c4274f; }
-@keyframes st-pop { from { transform: translate(-50%, 14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 
 /* ---------- phones: list first, tap a row, the panel slides in ---------- */
 @media (max-width: 899px) {
@@ -291,3 +282,32 @@
   .st-star { width: 36px; height: 36px; }
   .st-add { flex-direction: column; }
 }
+
+/* ---------- membership ---------- */
+.st-plan { padding: 16px 18px; border-radius: 18px; margin-bottom: 12px; color: #fff; background: linear-gradient(135deg, var(--pa), var(--pb)); }
+.st-plan-name { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-display, inherit); font-size: 20px; text-shadow: 0 1px 8px rgba(0, 0, 0, .35); }
+.st-plan-tag { margin: 6px 0 0; font-size: 13.5px; font-weight: 600; line-height: 1.4; text-shadow: 0 1px 8px rgba(0, 0, 0, .35); }
+.st-checks { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.st-checks li { position: relative; padding-left: 24px; font-size: 14px; line-height: 1.4; }
+.st-checks li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent-lime); box-shadow: 0 0 8px var(--accent-lime); }
+.st-checks small { display: block; color: var(--text-dim); font-size: 12.5px; }
+.st-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- locked (paid) options ---------- */
+.st-aud button.locked { opacity: .6; cursor: not-allowed; }
+.st-paid {
+  display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+  font-style: normal; font-size: 11px; font-weight: 800; color: var(--accent-lime);
+  background: color-mix(in srgb, var(--accent-lime) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent-lime) 35%, transparent);
+}
+.st-paid svg { width: 11px; height: 11px; }
+.st-upsell {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 11px 13px; border-radius: 14px;
+  font-size: 13.5px; font-weight: 600; background: color-mix(in srgb, var(--accent-lime) 9%, var(--surface-raised));
+  border: 1px solid color-mix(in srgb, var(--accent-lime) 38%, transparent);
+}
+.st-upsell svg { flex: none; width: 16px; height: 16px; color: var(--accent-lime); }
+.st-upsell span { flex: 1 1 180px; }
+.st-upsell a { font-weight: 800; color: var(--accent-lime); text-decoration: underline; text-underline-offset: 3px; }
+.st-linkbtn { all: unset; cursor: pointer; font-weight: 800; color: var(--accent-cyan); text-decoration: underline; text-underline-offset: 3px; }
+.st-linkbtn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }

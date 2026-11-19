@@ -2,6 +2,7 @@ import Link from "next/link";
 import SiteHeaderClient from "@/components/SiteHeaderClient";
 import MainNav from "@/components/MainNav";
 import ScrollTopButton from "@/components/ScrollTopButton";
+import Discover from "@/components/Discover";
 import Feed from "@/components/Feed";
 import { SearchIcon } from "@/components/icons";
 import { getCurrentUser } from "@/lib/current-user";
@@ -97,18 +98,24 @@ export default async function EventsPage({ searchParams }) {
         </nav>
 
         <div className="ev-filters">
-          <nav className="ev-chips" aria-label="Where">
-            <Link href={href({ when, cat, q })} className={!mode ? "on" : ""} prefetch={false}>Any place</Link>
-            {EVENT_MODES.map((m) => (
-              <Link key={m.value} href={href({ when, mode: m.value, cat, q })} className={mode === m.value ? "on" : ""} title={m.hint} prefetch={false}>{m.label}</Link>
-            ))}
-          </nav>
-          <nav className="ev-chips" aria-label="Kind of event">
-            <Link href={href({ when, mode, q })} className={!cat ? "on" : ""} prefetch={false}>Every kind</Link>
-            {EVENT_CATEGORIES.map((c) => (
-              <Link key={c} href={href({ when, mode, cat: c, q })} className={cat === c ? "on" : ""} prefetch={false}>{c}</Link>
-            ))}
-          </nav>
+          <div className="ev-group">
+            <h2 className="ev-side-title">Where</h2>
+            <nav className="ev-chips" aria-label="Where">
+              <Link href={href({ when, cat, q })} className={!mode ? "on" : ""} prefetch={false}>Any place</Link>
+              {EVENT_MODES.map((m) => (
+                <Link key={m.value} href={href({ when, mode: m.value, cat, q })} className={mode === m.value ? "on" : ""} title={m.hint} prefetch={false}>{m.label}</Link>
+              ))}
+            </nav>
+          </div>
+          <div className="ev-group">
+            <h2 className="ev-side-title">Kind of event</h2>
+            <nav className="ev-chips" aria-label="Kind of event">
+              <Link href={href({ when, mode, q })} className={!cat ? "on" : ""} prefetch={false}>Every kind</Link>
+              {EVENT_CATEGORIES.map((c) => (
+                <Link key={c} href={href({ when, mode, cat: c, q })} className={cat === c ? "on" : ""} prefetch={false}>{c}</Link>
+              ))}
+            </nav>
+          </div>
         </div>
 
         {filtered && (
@@ -130,6 +137,8 @@ export default async function EventsPage({ searchParams }) {
             )}
           </div>
         )}
+
+        <Discover spot="events" variant="tiles" className="dc-foot" title="More from GTAFanbase" />
       </main>
       <ScrollTopButton />
     </>

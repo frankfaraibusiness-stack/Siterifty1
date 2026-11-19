@@ -240,7 +240,6 @@ html[data-ai-bubble="hide"] .ai-bubble { display: none; }
   cursor: pointer;
 }
 .ai-ask-keep:hover { color: var(--text); text-decoration: underline; }
-.ai-toast { max-width: min(92vw, 440px); text-align: center; line-height: 1.4; border-radius: 18px; white-space: normal; }
 @keyframes aiAskIn { from { opacity: 0; transform: translateY(8px) scale(.9); } to { opacity: 1; transform: none; } }
 
 /* ---- reduced motion: keep the look, drop the movement ---- */
