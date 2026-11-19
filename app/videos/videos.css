@@ -384,6 +384,21 @@
 .vr-sheet-x svg { width: 20px; height: 20px; }
 .vr-sheet .vr-panel h2 { padding-right: 48px; }
 
+/* Desktop: the missions panel and share sheet take the whole screen like
+   FullScreen does, with one centred column (the close button stays top right
+   of that column). */
+@media (min-width: 641px) {
+  .vr-sheet-wrap { display: block; background: var(--bg); }
+  .vr-sheet, .vr-sheet.vr-share {
+    position: absolute; inset: 0; width: auto; max-width: none; max-height: none;
+    padding: 28px max(20px, calc((100% - 600px) / 2)) 56px;
+    border: 0; border-radius: 0; background: var(--bg);
+    animation: fsIn .32s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .vr-sheet-x { top: 12px; width: 40px; height: 40px; margin: 0 0 -40px auto; }
+}
+@media (prefers-reduced-motion: reduce) { .vr-sheet { animation: none; } }
+
 /* ------------------------------------------------------------- page layout */
 @media (min-width: 960px) {
   .vr-root { padding: 14px 20px; }

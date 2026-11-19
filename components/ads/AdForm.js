@@ -11,6 +11,7 @@ import { AdCardView, AdRowView } from "./AdViews";
 import StoryAd from "./StoryAd";
 import BudgetPicker from "./BudgetPicker";
 import { SAMPLE_AD, adsApi, imageSize } from "./adsApi";
+import { CheckIc, ImageIc, UploadIc, VideoIc } from "./AdIcons";
 
 // The Create ad wizard (and the Edit screen, which skips format and budget).
 // Left: the steps. Right: a live preview that uses the real ad components.
@@ -171,7 +172,7 @@ export default function AdForm({ mode = "create", ad = null, onDone, onToast }) 
         {steps.map(([id, label], i) => (
           <li key={id}>
             <button type="button" className={i === step ? "on" : i < step ? "done" : ""} onClick={() => jump(i)} aria-current={i === step ? "step" : undefined}>
-              <i>{i < step ? "✓" : i + 1}</i><span>{label}</span>
+              <i>{i < step ? <CheckIc size="12px" /> : i + 1}</i><span>{label}</span>
             </button>
           </li>
         ))}
@@ -186,7 +187,7 @@ export default function AdForm({ mode = "create", ad = null, onDone, onToast }) 
               <div className="am-pick">
                 {["image", "video"].map((t) => (
                   <button key={t} type="button" className={`am-pickcard${type === t ? " on" : ""}`} onClick={() => setType(t)} aria-pressed={type === t}>
-                    <span className="am-pick-ic">{t === "image" ? "🖼️" : "🎬"}</span>
+                    <span className="am-pick-ic">{t === "image" ? <ImageIc /> : <VideoIc />}</span>
                     <b>{AD_RATES[t].label}</b>
                     <span className="am-pick-price">{usd(AD_RATES[t].cpmCents)}<small> / 1,000 views</small></span>
                     <small>{t === "image" ? "Any shape. Shown full size, never cropped." : `Up to ${VIDEO_MAX_SECONDS} seconds. Plays muted in the feed.`}</small>
@@ -209,7 +210,7 @@ export default function AdForm({ mode = "create", ad = null, onDone, onToast }) 
                   </div>
                   {imgMode === "upload" ? (
                     <div className={`am-drop${drag ? " drag" : ""}`} onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={(e) => { e.preventDefault(); setDrag(false); pickImage(e.dataTransfer.files?.[0]); }}>
-                      {img.src && img.data ? <img src={img.src} alt="Your ad" /> : <span className="am-drop-ic">⬆</span>}
+                      {img.src && img.data ? <img src={img.src} alt="Your ad" /> : <span className="am-drop-ic"><UploadIc /></span>}
                       <b>{busy === "image" ? "Preparing image…" : img.data ? "Image ready" : "Drop an image here"}</b>
                       <small>JPG, PNG or WebP. We compress it for you.</small>
                       <button type="button" className="am-btn" onClick={() => fileIn.current?.click()} disabled={busy === "image"}>{img.data ? "Replace image" : "Choose image"}</button>
@@ -221,7 +222,7 @@ export default function AdForm({ mode = "create", ad = null, onDone, onToast }) 
                         <input type="url" inputMode="url" placeholder="https://yoursite.com/banner.jpg" value={img.url} onChange={(e) => changeUrl(e.target.value)} />
                       </label>
                       <button type="button" className="am-btn" onClick={checkUrl} disabled={busy === "image" || !img.url}>{busy === "image" ? "Checking…" : "Use this image"}</button>
-                      {img.src && !img.data && <p className="am-ok">✓ Image loaded ({img.w} × {img.h}).</p>}
+                      {img.src && !img.data && <p className="am-ok"><CheckIc size="13px" /> Image loaded ({img.w} × {img.h}).</p>}
                       <p className="am-fine">The link must be public and start with https://. If the other site later removes the picture, your ad shows without it. Uploading is safer.</p>
                     </div>
                   )}
@@ -236,7 +237,7 @@ export default function AdForm({ mode = "create", ad = null, onDone, onToast }) 
                 <>
                   <p className="am-lead">MP4, MOV or WebM, up to {VIDEO_MAX_SECONDS} seconds. We shrink it before uploading. It plays muted while it is on screen, and viewers can turn sound on.</p>
                   <div className="am-drop">
-                    {vid.preview ? <video src={vid.preview} poster={img.src} controls playsInline muted /> : <span className="am-drop-ic">🎬</span>}
+                    {vid.preview ? <video src={vid.preview} poster={img.src} controls playsInline muted /> : <span className="am-drop-ic"><VideoIc /></span>}
                     <b>{busy === "video" ? "Reading video…" : vid.file ? `${vid.file.name.slice(0, 34)} · ${mmss(vid.duration)}` : "No video yet"}</b>
                     <small>{vid.file ? "Cover picture taken from the video." : `Maximum ${VIDEO_MAX_SECONDS} seconds.`}</small>
                     <button type="button" className="am-btn" onClick={() => vidIn.current?.click()} disabled={busy === "video"}>{vid.file ? "Replace video" : "Choose video"}</button>
@@ -284,7 +285,7 @@ export default function AdForm({ mode = "create", ad = null, onDone, onToast }) 
                   const on = f.placements.includes(p.id);
                   return (
                     <button key={p.id} type="button" className={`am-place${on ? " on" : ""}`} aria-pressed={on} onClick={() => set("placements", on ? f.placements.filter((x) => x !== p.id) : [...f.placements, p.id])}>
-                      <span className="am-check">{on ? "✓" : ""}</span>
+                      <span className="am-check">{on ? <CheckIc size="14px" /> : null}</span>
                       <span><b>{p.label}</b><small>{p.note}</small><em>{p.format}</em></span>
                     </button>
                   );

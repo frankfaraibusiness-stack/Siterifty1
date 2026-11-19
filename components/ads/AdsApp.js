@@ -8,6 +8,8 @@ import AdForm from "./AdForm";
 import BudgetPicker from "./BudgetPicker";
 import { Billing, Guide, MyAds, Overview, Performance } from "./Panels";
 import { adsApi } from "./adsApi";
+import { BackIc } from "./AdIcons";
+import Toast, { useToast } from "../Toast";
 
 // The Ads Manager shell: tab bar, state, add-funds sheet and toasts.
 
@@ -62,16 +64,10 @@ export default function AdsApp({ user, initialAds, initialOrders }) {
   const [topUp, setTopUp] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [busyId, setBusyId] = useState("");
-  const [toast, setToast] = useState(null);
-  const timer = useRef(null);
+  const { toast, show, hide } = useToast();
   const top = useRef(null);
 
-  const say = useCallback((text, bad = false) => {
-    setToast({ text, bad });
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToast(null), 4200);
-  }, []);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  const say = useCallback((text, bad = false) => show(text, bad ? "error" : "success"), [show]);
 
   const go = useCallback((id, adId) => {
     if (!user && TABS.find((t) => t[0] === id)?.[2]) { setAuthOpen(true); return; }
@@ -119,7 +115,7 @@ export default function AdsApp({ user, initialAds, initialOrders }) {
       <div className="am-body">
         {editing ? (
           <>
-            <button type="button" className="am-back" onClick={() => setEditing(null)}>← Back to my ads</button>
+            <button type="button" className="am-back" onClick={() => setEditing(null)}><BackIc size="15px" /> Back to my ads</button>
             <h2 className="am-h">Edit “{editing.name}”</h2>
             <AdForm key={editing.id} mode="edit" ad={editing} onToast={say} onDone={(r) => { apply(r); setEditing(null); }} />
           </>
@@ -140,7 +136,7 @@ export default function AdsApp({ user, initialAds, initialOrders }) {
 
       {topUp && <TopUpSheet ad={topUp} onClose={() => setTopUp(null)} onToast={say} onDone={(r) => { apply(r); setTopUp(null); }} />}
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-      {toast && <div className={`am-toast${toast.bad ? " bad" : ""}`} role="status">{toast.text}</div>}
+      <Toast toast={toast} onClose={hide} />
     </div>
   );
 }

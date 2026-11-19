@@ -9,6 +9,7 @@ import { AdCardView, AdRowView } from "./AdViews";
 import { SourceBars, TrendChart } from "./Charts";
 import { SAMPLE_AD } from "./adsApi";
 import StoryAd from "./StoryAd";
+import { BarsIc, LayersIc, MegaphoneIc, PlayIc } from "./AdIcons";
 
 // ---- shared numbers ------------------------------------------------------------
 
@@ -35,7 +36,7 @@ function Thumb({ ad }) {
   const m = ad.media || {};
   return (
     <span className="am-thumb">
-      {m.src ? <img src={m.src} alt="" referrerPolicy="no-referrer" /> : <span>{ad.type === "video" ? "▶" : "Ad"}</span>}
+      {m.src ? <img src={m.src} alt="" referrerPolicy="no-referrer" /> : <span>{ad.type === "video" ? <PlayIc size="22px" /> : "Ad"}</span>}
       {ad.type === "video" && <em>VIDEO</em>}
     </span>
   );
@@ -100,7 +101,7 @@ export function Overview({ ads, go, signedIn, onSignIn }) {
 
       {ads.length === 0 && (
         <section className="am-card am-empty">
-          <div className="am-empty-ic">📣</div>
+          <div className="am-empty-ic"><MegaphoneIc /></div>
           <h3>{signedIn ? "You haven’t launched an ad yet" : "Sign in to launch your first ad"}</h3>
           <p>It takes about three minutes: pick a format, add your picture or video, choose where it shows and set a budget.</p>
           {signedIn ? <button type="button" className="am-btn solid" onClick={() => go("create")}>Create your first ad</button> : <button type="button" className="am-btn solid" onClick={onSignIn}>Sign in</button>}
@@ -130,7 +131,7 @@ export function MyAds({ ads, go, onAction, onTopUp, onEdit, busyId }) {
   const shown = ads.filter((a) => filter === "all" || a.status === filter);
   if (ads.length === 0) {
     return (
-      <section className="am-card am-empty"><div className="am-empty-ic">🗂️</div><h3>No ads yet</h3><p>Your ads will be listed here with their status, balance and results.</p><button type="button" className="am-btn solid" onClick={() => go("create")}>Create an ad</button></section>
+      <section className="am-card am-empty"><div className="am-empty-ic"><LayersIc /></div><h3>No ads yet</h3><p>Your ads will be listed here with their status, balance and results.</p><button type="button" className="am-btn solid" onClick={() => go("create")}>Create an ad</button></section>
     );
   }
   return (
@@ -192,7 +193,7 @@ export function Performance({ ads, adId, setAdId, go }) {
   const t = useMemo(() => totals(list), [list]);
   const days = useMemo(() => lastDays(list.map((a) => a.days), range), [list, range]);
   const rows = sourceRows(t);
-  if (ads.length === 0) return <section className="am-card am-empty"><div className="am-empty-ic">📊</div><h3>No data yet</h3><p>Launch an ad and its views, clicks and CTR will appear here.</p><button type="button" className="am-btn solid" onClick={() => go("create")}>Create an ad</button></section>;
+  if (ads.length === 0) return <section className="am-card am-empty"><div className="am-empty-ic"><BarsIc /></div><h3>No data yet</h3><p>Launch an ad and its views, clicks and CTR will appear here.</p><button type="button" className="am-btn solid" onClick={() => go("create")}>Create an ad</button></section>;
 
   const withViews = rows.filter((r) => r.views >= 20);
   const best = [...withViews].sort((a, b) => ctr(b.clicks, b.views) - ctr(a.clicks, a.views))[0];

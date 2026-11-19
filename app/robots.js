@@ -5,7 +5,7 @@ import { siteUrl } from "@/lib/site";
 export default function robots() {
   const base = siteUrl();
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/settings", "/create", "/profile", "/saved", "/messages"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/", "/settings", "/create", "/profile", "/saved", "/messages", "/welcome"] }],
     sitemap: `${base}/sitemap.xml`,
     host: base,
   };

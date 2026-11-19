@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { hostOf } from "@/lib/ads";
 import { useViewed } from "./adHooks";
+import { OutIc, PlayIc, SoundIc, SoundOffIc } from "./AdIcons";
 
 // The two looks of an ad. They are pure display (no fetching), so the Ad Maker
 // uses the very same components for its live preview (`preview` = no tracking).
@@ -59,7 +60,7 @@ export function AdCardView({ ad, onView, onClick, preview = false }) {
         <SponsoredTag />
         {isVideo && (
           <button type="button" className="ad-sound" aria-label={muted ? "Turn sound on" : "Turn sound off"} onClick={() => { setMuted(!muted); if (vid.current) vid.current.muted = !muted; }}>
-            {muted ? "🔇" : "🔊"}
+            {muted ? <SoundOffIc size="18px" /> : <SoundIc size="18px" />}
           </button>
         )}
       </div>
@@ -95,7 +96,7 @@ export function AdRowView({ ad, onView, onClick, preview = false }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={m.src} alt="" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
         ) : (
-          <span>{ad.type === "video" ? "▶" : "Ad"}</span>
+          <span>{ad.type === "video" ? <PlayIc size="22px" /> : "Ad"}</span>
         )}
       </div>
       <div className="ad-mini-text">
@@ -103,7 +104,7 @@ export function AdRowView({ ad, onView, onClick, preview = false }) {
         <p className="ad-mini-desc">{ad.description}</p>
         <div className="ad-mini-foot">
           <SponsoredTag mini />
-          <a href={ad.link} target="_blank" rel={REL} className="ad-mini-link" onClick={go}>{hostOf(ad.link) || "yourwebsite.com"} ↗</a>
+          <a href={ad.link} target="_blank" rel={REL} className="ad-mini-link" onClick={go}>{hostOf(ad.link) || "yourwebsite.com"} <OutIc size="11px" /></a>
         </div>
       </div>
     </aside>

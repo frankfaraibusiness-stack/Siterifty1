@@ -73,9 +73,15 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.pm .brand { min-width: 0; }
-.pm .brand-logo { height: 44px; }
-.pm .brand-word { display: block; font-size: 18px; }
+/* The name must never reach the close button: the logo and text shrink to fit, and the
+   text is cut short with "…" if a very narrow phone still doesn't leave room. */
+.pm .brand { min-width: 0; flex: 1 1 auto; gap: 8px; overflow: hidden; }
+.pm .brand-logo { flex: none; height: 38px; }
+.pm .brand-word { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: clamp(11px, 3.6vw, 15px); letter-spacing: 0.3px; }
+@media (min-width: 480px) {
+  .pm .brand-logo { height: 42px; }
+  .pm .brand-word { font-size: 17px; }
+}
 
 .pm-x {
   flex: none;
