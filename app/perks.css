@@ -1,0 +1,361 @@
+/* ===== Perks Shop (/perks) ===== */
+.pk-page { max-width: 1120px; margin: 0 auto; padding: 0 20px 100px; }
+
+/* ---- hero ---- */
+.pk-hero {
+  position: relative; overflow: hidden; text-align: center;
+  padding: 56px 24px 44px; border-radius: 28px;
+  background: linear-gradient(180deg, var(--surface-raised), var(--surface));
+  border: 1px solid var(--border);
+}
+.pk-hero-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(520px 260px at 12% 0%, color-mix(in srgb, var(--accent-pink) 34%, transparent), transparent 70%),
+    radial-gradient(520px 260px at 92% 10%, color-mix(in srgb, var(--accent-cyan) 26%, transparent), transparent 70%),
+    radial-gradient(520px 240px at 50% 130%, color-mix(in srgb, #ffd36b 22%, transparent), transparent 70%);
+}
+.pk-hero > * { position: relative; }
+.pk-eyebrow {
+  display: inline-block; padding: 5px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: #ffd36b; background: rgba(255,211,107,.12); border: 1px solid rgba(255,211,107,.4);
+}
+.pk-title {
+  margin-top: 16px; font-size: clamp(30px, 5.6vw, 54px); font-weight: 900;
+  letter-spacing: -.025em; line-height: 1.05; color: var(--text);
+}
+.pk-sub { max-width: 520px; margin: 14px auto 0; font-size: clamp(15px, 2vw, 17px); line-height: 1.55; color: var(--text-dim); }
+.pk-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; }
+.pk-chip {
+  padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 700;
+  color: var(--text); background: rgba(255,255,255,.06); border: 1px solid var(--border);
+}
+.pk-chip-test { color: var(--accent-lime); border-color: color-mix(in srgb, var(--accent-lime) 50%, transparent); background: color-mix(in srgb, var(--accent-lime) 10%, transparent); }
+.pk-chip-own { color: var(--accent-cyan); border-color: color-mix(in srgb, var(--accent-cyan) 50%, transparent); background: color-mix(in srgb, var(--accent-cyan) 10%, transparent); }
+
+/* ---- grid + cards ---- */
+.pk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 22px; }
+.pk-card {
+  all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column;
+  overflow: hidden; cursor: pointer; text-align: left; color: var(--text);
+  border-radius: 22px; background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--a) 26%, var(--border));
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.pk-card:hover, .pk-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--a) 70%, var(--border));
+  box-shadow: 0 22px 46px -26px color-mix(in srgb, var(--a) 70%, transparent);
+}
+.pk-card:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+.pk-card.is-owned { border-color: color-mix(in srgb, var(--accent-cyan) 55%, var(--border)); }
+
+.pk-card-flagship { grid-column: span 2; flex-direction: row; }
+.pk-card-flagship .pk-banner { flex: 1 1 54%; height: auto; min-height: 230px; }
+.pk-card-flagship .pk-card-body { flex: 1 1 46%; justify-content: center; padding: 24px 26px; }
+.pk-card-flagship .pk-card-title { font-size: 24px; }
+.pk-card-flagship .pk-card-desc { font-size: 15.5px; }
+.pk-card-flagship .pk-card-more { margin-top: 12px; }
+
+.pk-best, .pk-owned-badge {
+  position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.pk-best { top: 12px; left: 12px; color: #ffd36b; background: rgba(20,16,31,.72); border: 1px solid rgba(255,211,107,.5); }
+.pk-owned-badge { top: 138px; right: 12px; color: var(--accent-cyan); background: rgba(20,16,31,.78); border: 1px solid color-mix(in srgb, var(--accent-cyan) 60%, transparent); }
+.pk-owned-badge svg { width: 13px; height: 13px; }
+@media (min-width: 1024px) { .pk-card-flagship .pk-owned-badge { top: auto; bottom: 12px; right: auto; left: 12px; } }
+
+.pk-card-body { display: flex; flex-direction: column; flex: 1; gap: 8px; padding: 16px 18px 18px; }
+.pk-card-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pk-card-title { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.pk-card-price {
+  flex-shrink: 0; padding: 3px 11px; border-radius: 999px; font-size: 14px; font-weight: 900;
+  font-variant-numeric: tabular-nums; color: var(--text);
+  background: color-mix(in srgb, var(--a) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--a) 45%, transparent);
+}
+.pk-card-desc { font-size: 14px; line-height: 1.5; color: var(--text-dim); }
+.pk-card-more { margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 800; color: var(--a); }
+.pk-card-more i { display: inline-block; font-style: normal; transition: transform .2s ease; }
+.pk-card:hover .pk-card-more i { transform: translateX(4px); }
+
+/* ---- banners ---- */
+.pk-banner {
+  position: relative; display: block; height: 176px; overflow: hidden;
+  background: linear-gradient(135deg, var(--a), var(--b));
+}
+.pk-banner-lg { height: 220px; }
+.pk-banner::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(260px 160px at 85% 0%, rgba(255,255,255,.28), transparent 70%); }
+.pk-banner-grid {
+  position: absolute; inset: 0; opacity: .5;
+  background-image:
+    linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: linear-gradient(200deg, #000, transparent 70%); mask-image: linear-gradient(200deg, #000, transparent 70%);
+}
+.pk-banner-icon { position: absolute; right: -14px; bottom: -22px; width: 128px; height: 128px; color: #fff; opacity: .16; transform: rotate(-12deg); }
+.pk-banner-icon svg { width: 100%; height: 100%; stroke-width: 1.4; }
+/* Every scene is drawn on a 220x176 stage that is centred and scaled (--s) to fit its banner, so the
+   same art works in a 4-per-row desktop card, a 2-per-row phone card (down to 320px) and the sheet. */
+.pk-scene {
+  --s: .92; position: absolute; left: 50%; top: 50%; z-index: 1; width: 220px; height: 176px;
+  display: flex; align-items: center; justify-content: center;
+  transform: translate(-50%, -50%) scale(var(--s)); transform-origin: center;
+}
+.pk-card-flagship .pk-scene { --s: 1.08; }
+.pk-banner-lg .pk-scene { --s: 1.2; }
+
+/* mini comment cards used in the scenes */
+.pk-mini {
+  display: flex; align-items: flex-start; gap: 9px; width: min(290px, 78%); padding: 9px 11px; border-radius: 13px;
+  background: rgba(20,16,31,.72); border: 1px solid rgba(255,255,255,.2);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.pk-dot { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.45)); }
+.pk-lines { display: flex; flex: 1; flex-direction: column; gap: 6px; padding-top: 4px; min-width: 0; }
+.pk-line { display: block; height: 6px; border-radius: 4px; background: rgba(255,255,255,.55); }
+
+.pk-scene-pin { flex-direction: column; gap: 7px; padding-top: 26px; }
+.pk-mini-gold { border-color: #ffd36b; box-shadow: 0 0 0 1px rgba(255,211,107,.35), 0 0 26px -4px rgba(255,211,107,.7); }
+.pk-mini-gold .pk-dot { background: linear-gradient(135deg, #ffd36b, #ff9a3d); }
+.pk-mini-faded { opacity: .5; transform: scale(.94); padding-top: 7px; padding-bottom: 7px; }
+.pk-mini-faded-2 { opacity: .32; transform: scale(.88); }
+.pk-tag { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; font-size: 10.5px; font-weight: 800; color: #ffd36b; }
+.pk-tag svg { width: 11px; height: 11px; }
+
+.pk-scene-essay { flex-direction: column; gap: 10px; }
+.pk-box { display: flex; flex-direction: column; gap: 7px; width: min(270px, 74%); padding: 14px; border-radius: 14px; background: rgba(20,16,31,.72); border: 1px solid rgba(255,255,255,.2); }
+.pk-limit { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; color: #fff; background: rgba(20,16,31,.78); border: 1px solid rgba(255,255,255,.22); }
+.pk-limit s { opacity: .55; }
+.pk-limit b { color: var(--accent-cyan); }
+.pk-limit s::after { content: " →"; text-decoration: none; display: inline-block; margin-left: 6px; }
+
+.pk-mini-neon {
+  border-color: #ff9ad0;
+  box-shadow: 0 0 0 1px rgba(255,154,208,.4), 0 0 30px 0 rgba(255,61,127,.75), inset 0 0 18px -8px rgba(123,47,247,.9);
+  animation: pkNeon 2.6s ease-in-out infinite alternate;
+}
+@keyframes pkNeon {
+  from { box-shadow: 0 0 0 1px rgba(255,154,208,.3), 0 0 16px 0 rgba(255,61,127,.5), inset 0 0 14px -8px rgba(123,47,247,.7); }
+  to   { box-shadow: 0 0 0 1px rgba(255,154,208,.6), 0 0 38px 2px rgba(255,61,127,.9), inset 0 0 22px -8px rgba(123,47,247,1); }
+}
+
+.pk-scene-pack { gap: 0; }
+.pk-swatch {
+  width: 74px; height: 74px; border-radius: 22px; margin: 0 -8px; transform: rotate(-8deg);
+  background: linear-gradient(135deg, var(--s1), var(--s2)); border: 3px solid rgba(255,255,255,.85);
+  box-shadow: 0 12px 24px -10px rgba(0,0,0,.55);
+}
+.pk-swatch-mid { z-index: 1; width: 86px; height: 86px; transform: rotate(0) translateY(-4px); }
+.pk-swatch:last-child { transform: rotate(8deg); }
+
+.pk-ring { position: relative; width: 118px; height: 118px; }
+.pk-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.pk-ring-bg { fill: rgba(20,16,31,.55); stroke: rgba(255,255,255,.28); stroke-width: 8; }
+.pk-ring-fg { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 264; stroke-dashoffset: 0; }
+.pk-ring span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; }
+.pk-ring b { font-size: 28px; font-weight: 900; line-height: 1; }
+.pk-ring small { margin-top: 3px; font-size: 11px; font-weight: 700; opacity: .75; }
+
+/* ---- how it works strip ---- */
+.pk-how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+.pk-how > div { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); }
+.pk-how b { font-size: 15px; font-weight: 800; }
+.pk-how span { font-size: 13.5px; line-height: 1.45; color: var(--text-dim); }
+.pk-plans-link { margin-top: 22px; text-align: center; font-size: 14px; color: var(--text-dim); }
+.pk-plans-link a { color: var(--accent-cyan); font-weight: 700; text-decoration: none; }
+.pk-plans-link a:hover { text-decoration: underline; }
+
+/* ---- detail screen (a full screen: components/FullScreen.js) ---- */
+.pk-fs .fs-page { gap: 0; padding-top: 0; }
+.pk-fs-banner { margin: 0 -16px; }
+.pk-fs-banner .pk-banner { border-radius: 0; }
+@media (min-width: 700px) { .pk-fs-banner { margin: 18px 0 0; } .pk-fs-banner .pk-banner { border-radius: 22px; } }
+.pk-sheet-body { padding: 22px 2px 12px; }
+.pk-sheet-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.pk-sheet-title { font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
+.pk-price-pill {
+  padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--text);
+  background: color-mix(in srgb, var(--a) 18%, transparent); border: 1px solid color-mix(in srgb, var(--a) 50%, transparent);
+}
+.pk-sheet-sum { margin-top: 10px; font-size: 16px; font-weight: 600; line-height: 1.5; color: var(--text); }
+.pk-p { margin-top: 12px; font-size: 15px; line-height: 1.62; color: var(--text-dim); }
+.pk-h3 { margin: 24px 0 10px; font-size: 12.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--text-dim); }
+.pk-steps { list-style: none; counter-reset: pk; display: flex; flex-direction: column; gap: 10px; }
+.pk-steps li { counter-increment: pk; display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.45; }
+.pk-steps li::before {
+  content: counter(pk); flex-shrink: 0; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  font-size: 13px; font-weight: 900; color: #14101f; background: linear-gradient(135deg, var(--a), color-mix(in srgb, var(--a) 55%, var(--b)));
+}
+.pk-note {
+  display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; padding: 12px 14px; border-radius: 14px;
+  font-size: 13.5px; line-height: 1.5; color: var(--text-dim);
+  background: color-mix(in srgb, var(--a) 9%, transparent); border: 1px solid color-mix(in srgb, var(--a) 28%, transparent);
+}
+.pk-note svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; color: var(--a); }
+
+.pk-buy {
+  all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 52px; border-radius: 15px; font-size: 16px; font-weight: 900; color: #14101f; text-align: center;
+  background: linear-gradient(135deg, var(--a), color-mix(in srgb, var(--a) 55%, var(--b)));
+  box-shadow: 0 14px 28px -16px var(--a); transition: transform .15s ease, filter .15s ease;
+}
+.pk-buy:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
+.pk-buy:active:not(:disabled) { transform: translateY(0); }
+.pk-buy:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+.pk-buy:disabled { cursor: default; }
+.pk-buy[aria-busy="true"] { opacity: .75; }
+.pk-buy.is-owned { color: var(--accent-cyan); background: color-mix(in srgb, var(--accent-cyan) 12%, var(--surface-raised)); border: 1px solid color-mix(in srgb, var(--accent-cyan) 55%, transparent); box-shadow: none; }
+.pk-buy svg { width: 20px; height: 20px; }
+.pk-foot-note { text-align: center; font-size: 12.5px; color: var(--text-dim); }
+.pk-try { text-align: center; font-size: 14.5px; font-weight: 800; color: var(--accent-cyan); text-decoration: none; padding: 4px 0; }
+.pk-try:hover { text-decoration: underline; }
+
+/* ---- tablet / phone ---- */
+@media (max-width: 1023px) {
+  /* Two-cell cards stack (banner on top) once the row gets narrow. */
+  .pk-card-flagship { flex-direction: column; }
+  .pk-card-flagship .pk-banner { flex: none; height: 136px; min-height: 0; }
+  .pk-card-flagship .pk-card-body { padding: 16px 18px 18px; }
+  .pk-card-flagship .pk-card-title { font-size: 18px; }
+  .pk-card-flagship .pk-card-desc { font-size: 14px; }
+  .pk-card-flagship .pk-card-more { margin-top: auto; }
+  .pk-banner { height: 136px; }
+  .pk-scene { --s: .72; }
+  .pk-card-flagship .pk-scene { --s: .8; }
+  .pk-owned-badge, .pk-card-flagship .pk-owned-badge { top: 98px; right: 12px; bottom: auto; left: auto; }
+  .pk-banner-lg .pk-scene { --s: 1.2; }
+}
+@media (max-width: 900px) {
+  .pk-how { grid-template-columns: 1fr; }
+}
+/* Phones: 2 cards per row, always (even at 320px wide). */
+@media (max-width: 759px) {
+  .pk-page { padding: 0 12px 90px; }
+  .pk-hero { padding: 40px 18px 32px; border-radius: 22px; }
+  .pk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pk-card-flagship { grid-column: auto; }
+  .pk-card { border-radius: 18px; }
+  .pk-banner, .pk-card-flagship .pk-banner { height: 112px; }
+  .pk-banner-icon { width: 84px; height: 84px; right: -10px; bottom: -14px; }
+  .pk-scene, .pk-card-flagship .pk-scene { --s: .62; }
+  .pk-card-body, .pk-card-flagship .pk-card-body { gap: 5px; padding: 10px 11px 12px; }
+  .pk-card-row { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .pk-card-title, .pk-card-flagship .pk-card-title { font-size: 14px; line-height: 1.2; overflow-wrap: anywhere; }
+  .pk-card-price { padding: 2px 9px; font-size: 12.5px; }
+  .pk-card-desc, .pk-card-flagship .pk-card-desc {
+    font-size: 12.5px; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .pk-card-more, .pk-card-flagship .pk-card-more { padding-top: 2px; font-size: 12.5px; }
+  .pk-best { top: 8px; left: 8px; padding: 3px 8px; font-size: 10px; }
+  .pk-owned-badge, .pk-card-flagship .pk-owned-badge { top: 76px; right: 8px; padding: 3px 8px; font-size: 10px; }
+  .pk-owned-badge svg { width: 11px; height: 11px; }
+}
+/* Bigger phones have room for a larger scene. */
+@media (min-width: 520px) and (max-width: 759px) {
+  .pk-banner, .pk-card-flagship .pk-banner { height: 132px; }
+  .pk-scene, .pk-card-flagship .pk-scene { --s: .72; }
+  .pk-owned-badge, .pk-card-flagship .pk-owned-badge { top: 96px; }
+}
+/* The detail sheet's big banner keeps its own size at every width (the card rules above must not shrink it). */
+.pk-banner.pk-banner-lg { height: 220px; }
+@media (max-width: 640px) {
+  .pk-banner.pk-banner-lg { height: 190px; }
+  .pk-banner-lg .pk-scene { --s: 1.05; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pk-mini-neon { animation: none; }
+  .pk-card, .pk-card-more i, .pk-buy { transition: none; }
+}
+
+/* ===== Perks inside the rest of the app ===== */
+
+/* Comments: Forever Pin (gold frame + tag) */
+.cm-item.is-forever {
+  background: linear-gradient(135deg, color-mix(in srgb, #ffd36b 18%, transparent), transparent 75%);
+  border-color: color-mix(in srgb, #ffd36b 50%, transparent);
+  box-shadow: 0 0 24px -14px #ffd36b;
+}
+.cm-pin-forever { color: #ffd36b; background: color-mix(in srgb, #ffd36b 16%, transparent); border-color: color-mix(in srgb, #ffd36b 55%, transparent); }
+
+/* Comments: Neon Glow, in the commenter's own accent colours */
+.cm-item.has-glow {
+  margin: 6px 0; padding: 12px; border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ga) 11%, transparent), color-mix(in srgb, var(--gb) 8%, transparent));
+  border: 1px solid color-mix(in srgb, var(--ga) 60%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ga) 16%, transparent), 0 0 18px -4px color-mix(in srgb, var(--ga) 55%, transparent), inset 0 0 22px -14px var(--gb);
+  animation: cmGlow 3.2s ease-in-out infinite alternate;
+}
+.cm-item.has-glow .cm-avatar { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ga); }
+@keyframes cmGlow {
+  from { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ga) 12%, transparent), 0 0 10px -4px color-mix(in srgb, var(--ga) 40%, transparent), inset 0 0 18px -14px var(--gb); }
+  to   { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ga) 26%, transparent), 0 0 24px -2px color-mix(in srgb, var(--ga) 70%, transparent), inset 0 0 26px -12px var(--gb); }
+}
+@media (prefers-reduced-motion: reduce) { .cm-item.has-glow { animation: none; } }
+
+/* Profile editors: locked Vice City Pack accents */
+.pf-themes { flex-wrap: wrap; }
+.pf-theme-locked { position: relative; display: grid; place-items: center; opacity: .55; color: #fff; text-decoration: none; }
+.pf-theme-locked:hover { opacity: .9; }
+.pf-theme-locked svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.st-swatch-locked { opacity: .6; text-decoration: none; }
+.st-swatch-locked:hover { opacity: 1; }
+.st-swatch-locked svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ===== Perks round 2: scenes ===== */
+.pk-bio-head { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.pk-bio-head .pk-line { height: 7px; }
+.pk-namerow { display: flex; align-items: center; gap: 6px; color: #fff; font-size: 12.5px; line-height: 1; }
+.pk-sup { display: inline-flex; width: 15px; height: 15px; color: #ffd36b; filter: drop-shadow(0 0 5px rgba(255,211,107,.9)); }
+.pk-sup svg { width: 100%; height: 100%; }
+.pk-gname-wrap { padding: 10px 20px; border-radius: 16px; background: rgba(20,16,31,.72); border: 1px solid rgba(255,255,255,.2); }
+.pk-gname {
+  font-size: 30px; font-weight: 900; letter-spacing: -.01em;
+  background: linear-gradient(90deg, #ffd36b, #ff6ec7, #7df9ff, #ffd36b); background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  animation: fxSlide 4s linear infinite;
+}
+.pk-halo-av {
+  display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%;
+  font-size: 34px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #1b3a8a, #3b2fa0);
+  border: 3px solid rgba(20,16,31,.9);
+  animation: pkHalo 2.4s ease-in-out infinite alternate;
+}
+@keyframes pkHalo {
+  from { box-shadow: 0 0 0 3px #fff, 0 0 14px 2px rgba(255,255,255,.55); }
+  to   { box-shadow: 0 0 0 3px #c9f0ff, 0 0 34px 8px rgba(255,255,255,.9); }
+}
+
+/* ===== Perks round 2: in the rest of the app ===== */
+
+/* Supporter Badge (gold star next to a name) */
+.fb-supporter { display: inline-flex; flex: none; width: 1.05em; height: 1.05em; margin-left: .4em; vertical-align: -.17em; color: #ffd36b; filter: drop-shadow(0 0 .3em rgba(255,211,107,.7)); }
+.fb-supporter svg { width: 100%; height: 100%; fill: currentColor; }
+.fb-supporter.fb-lg { width: .8em; height: .8em; margin-left: .35em; vertical-align: .02em; }
+.cm-meta .fb-supporter { margin-left: 0; }
+
+/* Gradient Name (moving gradient in the person's two accent colours) */
+.fx-name {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--na) 70%, #fff), color-mix(in srgb, var(--nb) 70%, #fff), color-mix(in srgb, var(--na) 70%, #fff));
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  animation: fxSlide 6s linear infinite;
+}
+@keyframes fxSlide { from { background-position: 0% 0; } to { background-position: -200% 0; } }
+
+/* Halo Avatar (pulsing glow in the person's accent colours) */
+.has-halo { animation: fxHalo 2.8s ease-in-out infinite alternate; }
+@keyframes fxHalo {
+  from { box-shadow: 0 0 0 2px var(--a), 0 0 8px 1px color-mix(in srgb, var(--b) 55%, transparent); }
+  to   { box-shadow: 0 0 0 2px var(--b), 0 0 22px 5px color-mix(in srgb, var(--a) 75%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-name, .pk-gname, .pk-halo-av { animation: none; }
+  .has-halo { animation: none; box-shadow: 0 0 0 2px var(--a), 0 0 14px 2px color-mix(in srgb, var(--b) 60%, transparent); }
+}

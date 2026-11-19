@@ -1,0 +1,56 @@
+/* =====================================================================
+   Desktop layout for the landing page (/). Loaded last, phone styles are
+   untouched below 900px. Two columns: feed on the left, discover cards
+   (Hot Discussions, Trending tags) on the right.
+   ===================================================================== */
+
+/* Phone / tablet: the new wrappers are invisible, so nothing moves. */
+.lp-grid, .lp-aside, .lp-feedcol { display: contents; }
+
+@media (min-width: 900px) {
+  /* Header: same width and gutters as the page below it. */
+  body:has(.lp) .site-header { padding-left: max(24px, calc((100vw - 1240px) / 2 + 24px)); padding-right: max(24px, calc((100vw - 1240px) / 2 + 24px)); }
+
+  /* Nav pills: left-aligned in the page container, natural width. */
+  .main-nav.main-nav-home { max-width: 1240px; padding: 8px 24px 10px; }
+  .main-nav.main-nav-home .nav-link { flex: 0 0 auto; padding: 0 22px; font-size: 14.5px; }
+
+  .page-content.lp { max-width: 1240px; padding: 0 24px 72px; }
+
+  /* Banner: no longer stretched edge to edge. */
+  .lp-banner { margin: 4px auto 0; max-width: 940px; }
+  .lp-pad { padding: 0; max-width: 940px; margin: 0 auto; }
+  .sb.sb-compact { margin-top: 16px; padding: 5px 5px 5px 18px; }
+  .sb-compact .sb-input { font-size: 16px; }
+
+  .lp-grid {
+    display: grid; grid-template-columns: minmax(0, 1fr) 360px; column-gap: 28px;
+    grid-template-rows: auto auto 1fr; align-items: start; margin-top: 4px;
+  }
+  .lp-grid > .lp-tiles { grid-column: 1; grid-row: 1; padding: 16px 0 0; gap: 10px; }
+  .lp-grid > .lp-stories { grid-column: 1; grid-row: 2; padding: 14px 0 0; grid-template-columns: 110px minmax(0, 1fr); }
+  .lp-grid > .lp-feedcol { display: block; grid-column: 1; grid-row: 3; min-width: 0; }
+  .lp-tile { height: 70px; font-size: 13px; }
+
+  /* Right-hand column stays in view while the feed scrolls. */
+  .lp-aside {
+    display: flex; flex-direction: column; gap: 16px; grid-column: 2; grid-row: 1 / span 3;
+    position: sticky; top: calc(80px + var(--nav-h, 0px)); padding-top: 16px; max-height: calc(100dvh - 96px - var(--nav-h, 0px)); overflow-y: auto; scrollbar-width: none;
+    transition: top .4s cubic-bezier(.22,.61,.36,1);
+  }
+  .lp-aside::-webkit-scrollbar { display: none; }
+  .lp-aside > .lp-hot, .lp-aside > .tt { margin: 0; }
+  .lp-hot-thumb { width: 92px; min-height: 108px; }
+  .tt-list { flex-wrap: wrap; overflow: visible; }
+
+  /* Feed column. */
+  .lp-feedcol .feed-tabs { margin: 18px 0 4px; }
+  .lp-feedcol .feed-note { margin: 14px 0 0; }
+  .lp .feed { margin-top: 14px; gap: 20px; }
+  .lp .empty-feed { margin-top: 14px; }
+}
+
+/* Wide screens: a little more room for the side column. */
+@media (min-width: 1280px) {
+  .lp-grid { grid-template-columns: minmax(0, 1fr) 390px; column-gap: 32px; }
+}
