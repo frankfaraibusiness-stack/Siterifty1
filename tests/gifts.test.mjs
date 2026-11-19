@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   GAMES,
   CATEGORIES,
   GIFTS,
+  GIFT_ART,
   FEATURED,
+  giftArtUrl,
   cleanContext,
   contextFromParams,
   contextQuery,
@@ -124,4 +128,18 @@ test("default message: used only when the sender wrote nothing, and is stable", 
   assert.ok(a.text.length > 5);
   assert.deepEqual(giftMessage("vc-infernus", "   ", "r1"), a); // same gift + receipt, same line
   assert.ok(giftMessage("not-a-gift", "", "x").text); // never empty
+});
+
+test("gift artwork: every entry points at a real gift and a real file", () => {
+  for (const [id, url] of Object.entries(GIFT_ART)) {
+    assert.ok(getGift(id), `GIFT_ART has an unknown gift id: ${id}`);
+    assert.match(url, /^\/gifts\/art\/[a-z0-9-]+\.(webp|png|svg)$/, `${id}: art path`);
+    const file = fileURLToPath(new URL(`../public${url}`, import.meta.url));
+    assert.ok(existsSync(file), `${id}: missing file public${url}`);
+    assert.equal(getGift(id).art, url);
+    assert.equal(giftArtUrl(id), url);
+  }
+  // gifts without artwork fall back to their emoji
+  for (const g of GIFTS) if (!GIFT_ART[g.id]) assert.equal(g.art, null);
+  assert.equal(giftArtUrl("nope"), null);
 });
