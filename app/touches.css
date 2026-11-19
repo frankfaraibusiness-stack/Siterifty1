@@ -1,0 +1,359 @@
+/* =====================================================================
+   Touches: lots of small polish, loaded last (see app/layout.js).
+   Colours come from the look variables, so City Look themes, high contrast
+   and the reduced-motion choice keep working. Anything that moves is wrapped
+   in prefers-reduced-motion: no-preference and skipped for data-motion="reduced".
+
+   1. Site-wide micro-polish        5. Feed end-cap, greeting, recent searches
+   2. Reading progress + header     6. 404 / error pages
+   3. Scroll-to-top ring            7. Keyboard: g hint, j/k ring
+   4. Offline pill, cheat banner    8. Post cards + the Spoiler Shield
+   ===================================================================== */
+
+/* ---- 1. Site-wide micro-polish ----------------------------------------- */
+
+:root { accent-color: var(--accent-cyan); }
+:where(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea) { caret-color: var(--accent-cyan); }
+
+/* Anchor jumps (table of contents, #post-123) stop under the sticky header. */
+:where([id]) { scroll-margin-top: 84px; }
+
+/* No 300ms tap delay and no accidental double-tap zoom on controls. */
+:where(a, button, [role="button"], summary, label, select) { touch-action: manipulation; }
+
+/* Counts line up as they change. */
+:where(.like-count, .post-stats, .act-btn, .stat-link, .tt-chip em) { font-variant-numeric: tabular-nums; }
+
+/* Long links and unbroken strings wrap instead of pushing the card wider. */
+:where(.post-text, .post-title, .theory-text, .cm-text) { overflow-wrap: anywhere; }
+
+/* A quiet press for anything tappable that has no pressed state of its own. */
+:where(.lp-tile, .feed-tab, .tt-chip, .nav-link, .ev-chips a, .rs-chip, .fe-btn, .oops-btn) {
+  transition: transform .15s ease;
+}
+:where(.lp-tile, .feed-tab, .tt-chip, .nav-link, .ev-chips a, .rs-chip, .fe-btn, .oops-btn):active { transform: scale(.97); }
+
+/* Avatars nudge up when you hover them. */
+@media (hover: hover) {
+  .post-avatar { transition: transform .2s cubic-bezier(.34, 1.56, .64, 1); }
+  .post-avatar-link:hover .post-avatar { transform: scale(1.06); }
+}
+
+/* The exact time is a tooltip on "2h": show that it is one. */
+.post-time[title] { text-decoration: underline dotted transparent; text-underline-offset: 3px; transition: text-decoration-color .2s; }
+.post-time[title]:hover { text-decoration-color: currentColor; }
+
+/* Menus pop open instead of appearing. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .post-menu { transform-origin: top right; animation: ptPop .16s cubic-bezier(.2, .8, .3, 1.2); }
+  @keyframes ptPop { from { opacity: 0; transform: scale(.94) translateY(-4px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---- 2. Reading progress bar + header lift ------------------------------ */
+
+.pt-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 120; pointer-events: none;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  opacity: 0; transition: opacity .25s ease;
+}
+html[data-scrolled] .pt-progress { opacity: 1; }
+.pt-progress i {
+  display: block; height: 100%; transform-origin: left center; transform: scaleX(var(--scroll-p, 0));
+  background: linear-gradient(90deg, var(--accent-pink), var(--accent-lime), var(--accent-cyan));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-cyan) 55%, transparent);
+}
+
+/* Once you scroll, the header firms up and casts a soft shadow. */
+.site-header { transition: background-color .25s ease, box-shadow .25s ease; }
+html[data-scrolled] .site-header {
+  background: rgba(var(--bg-rgb), .8);
+  box-shadow: 0 12px 28px -20px rgba(0, 0, 0, .8);
+}
+
+/* ---- 3. Scroll-to-top ring ---------------------------------------------- */
+
+.scroll-top-btn { isolation: isolate; }
+.scroll-top-btn svg { position: relative; }
+.stb-ring {
+  position: absolute; inset: -1px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(var(--accent-cyan) calc(var(--scroll-p, 0) * 360deg), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+}
+
+/* ---- 4. Offline pill + cheat-code banner -------------------------------- */
+
+.pt-net {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 74px); z-index: 130;
+  display: inline-flex; align-items: center; gap: 9px; max-width: calc(100vw - 24px);
+  padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700; text-align: center;
+  color: var(--text); background: var(--surface-raised); border: 1.5px solid var(--accent-pink);
+  box-shadow: 0 14px 34px -12px rgba(0, 0, 0, .7);
+  transform: translateX(-50%);
+}
+.pt-net-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--accent-pink); }
+.pt-net.back { border-color: var(--accent-lime); }
+.pt-net.back .pt-net-dot { background: var(--accent-lime); }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .pt-net { animation: ptDrop .3s cubic-bezier(.2, .8, .3, 1.2); }
+  @keyframes ptDrop { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translateX(-50%); } }
+}
+
+.pt-mission {
+  all: unset; box-sizing: border-box; position: fixed; inset: 0; z-index: 400; cursor: pointer;
+  display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, .55), rgba(0, 0, 0, .15) 60%, transparent 80%);
+  animation: ptMission 4.8s ease both;
+}
+.pt-mission-title {
+  font-family: var(--font-display, inherit); font-size: clamp(34px, 11vw, 78px); line-height: 1; letter-spacing: 1px; text-transform: uppercase;
+  color: #f2c14e; text-shadow: 0 3px 0 #7a5410, 0 0 30px rgba(242, 193, 78, .45), 0 10px 34px rgba(0, 0, 0, .7);
+}
+.pt-mission-sub { font-size: clamp(16px, 4.4vw, 26px); font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
+@keyframes ptMission {
+  0% { opacity: 0; transform: scale(1.18); }
+  9% { opacity: 1; transform: scale(1); }
+  86% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(.98); }
+}
+
+/* ---- 5. Feed end-cap, greeting, recent searches ------------------------- */
+
+.fe { display: grid; justify-items: center; gap: 8px; margin: 18px 0 8px; padding: 30px 18px 26px; text-align: center; border-radius: 24px; border: 1.5px dashed var(--border); }
+.fe-check {
+  display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 4px; border-radius: 50%;
+  color: var(--on-accent); background: linear-gradient(135deg, var(--accent-lime), var(--accent-cyan));
+  box-shadow: 0 12px 28px -12px var(--accent-cyan);
+}
+.fe-check svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.fe-title { font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
+.fe-sub { max-width: 34ch; font-size: 14px; line-height: 1.5; color: var(--text-dim); }
+.fe-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+.fe-btn {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 800;
+  background: var(--surface); border: 1.5px solid var(--border);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.fe-btn:hover { border-color: var(--accent-cyan); }
+.fe-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.fe-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.fe-btn.spin svg { animation: ptSpin .8s ease; }
+@keyframes ptSpin { to { transform: rotate(360deg); } }
+.fe-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-top: 14px; padding-top: 14px; width: 100%; border-top: 1px solid var(--border); }
+.fe-links a { font-size: 12.5px; font-weight: 600; color: var(--text-dim); text-decoration: none; }
+.fe-links a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+html[data-links="on"] .fe-links a { text-decoration: underline; text-underline-offset: 3px; }
+
+.gr { display: flex; align-items: center; gap: 9px; padding: 12px 2px 0; font-size: 14px; color: var(--text-dim); }
+.gr svg { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--accent-lime); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.gr-hi b { color: var(--text); font-weight: 800; }
+.gr-date { margin-left: auto; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .gr { animation: ptFade .5s ease both; }
+  @keyframes ptFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+
+.rs { margin: 4px 0 18px; }
+.rs-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.rs-head h2 { font-size: 15px; font-weight: 800; }
+.rs-clear { all: unset; cursor: pointer; font-size: 12.5px; font-weight: 700; color: var(--text-dim); }
+.rs-clear:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.rs-clear:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; border-radius: 4px; }
+.rs-list { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+.rs-item { display: inline-flex; align-items: stretch; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--border); overflow: hidden; }
+.rs-chip { display: inline-flex; align-items: center; gap: 7px; max-width: 46vw; padding: 7px 6px 7px 12px; font-size: 13.5px; font-weight: 700; text-decoration: none; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rs-chip svg { flex: none; width: 15px; height: 15px; fill: none; stroke: var(--text-dim); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rs-x { all: unset; cursor: pointer; display: grid; place-items: center; width: 32px; color: var(--text-dim); }
+.rs-x svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.rs-x:hover { color: var(--accent-pink); }
+.rs-chip:hover { background: var(--surface-hover); }
+.rs-chip:focus-visible, .rs-x:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: -2px; }
+
+/* ---- 6. 404 and error pages --------------------------------------------- */
+
+.oops-wrap { max-width: 640px; margin: 0 auto; padding: 28px 16px 90px; }
+.oops {
+  position: relative; display: grid; justify-items: center; gap: 12px; padding: 34px 20px 28px; text-align: center; overflow: hidden;
+  border-radius: 28px; border: 1px solid var(--border);
+  background:
+    radial-gradient(420px 220px at 90% 0%, color-mix(in srgb, var(--accent-pink) 24%, transparent), transparent 70%),
+    radial-gradient(380px 220px at 0% 110%, color-mix(in srgb, var(--accent-cyan) 18%, transparent), transparent 70%),
+    var(--surface);
+}
+.oops::after { content: ""; position: absolute; inset: auto 0 0; height: 3px; background: linear-gradient(90deg, var(--accent-pink), var(--accent-lime), var(--accent-cyan)); }
+.oops-code {
+  font-family: var(--font-display, inherit); font-size: clamp(76px, 24vw, 132px); line-height: .95; letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-lime)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 8px 22px color-mix(in srgb, var(--accent-pink) 35%, transparent));
+}
+.oops-title { font-size: clamp(21px, 5.6vw, 28px); font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
+.oops-title span { color: var(--accent-pink); }
+.oops-sub { max-width: 44ch; font-size: 14.5px; line-height: 1.55; color: var(--text-dim); }
+.oops-ref { font-size: 12px; font-weight: 700; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.oops-search { width: 100%; max-width: 440px; margin-top: 4px; text-align: left; }
+.oops-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+.oops-btn {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; padding: 10px 18px; border-radius: 999px;
+  font-size: 14px; font-weight: 800; text-decoration: none; color: var(--text); background: var(--surface-raised); border: 1.5px solid var(--border);
+  transition: border-color .15s ease, box-shadow .2s ease, transform .15s ease;
+}
+.oops-btn:hover { border-color: var(--accent-cyan); }
+.oops-btn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+.oops-btn.solid { color: var(--on-accent); border-color: transparent; background: linear-gradient(135deg, var(--accent-lime), var(--accent-cyan)); box-shadow: 0 10px 26px -12px var(--accent-cyan); }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .oops-code { animation: ptWobble 2.6s ease-in-out infinite; transform-origin: 50% 80%; }
+  @keyframes ptWobble { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
+}
+
+/* ---- 7. Keyboard: "g then ..." reminder and the j / k ring -------------- */
+
+.ks-alt { display: inline-flex; align-items: center; gap: 6px; }
+.ks-pending {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); z-index: 300; transform: translateX(-50%);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; max-width: calc(100vw - 24px);
+  padding: 10px 16px; border-radius: 16px; font-size: 12.5px; font-weight: 700; color: var(--text-dim);
+  background: var(--surface-raised); border: 1px solid var(--border); box-shadow: 0 16px 40px -14px rgba(0, 0, 0, .75);
+}
+.ks-pending kbd, .ks-pending-opt kbd {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; margin-right: 5px; border-radius: 6px;
+  font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); background: var(--surface); border: 1px solid var(--border);
+}
+.ks-pending-opt { display: inline-flex; align-items: center; }
+.ks-pending > kbd { margin-right: 0; color: var(--on-accent); background: var(--accent-lime); border-color: transparent; }
+
+main .post { scroll-margin-top: 84px; }
+.post[data-kb] { box-shadow: 0 0 0 2px var(--accent-cyan), 0 0 26px -6px color-mix(in srgb, var(--accent-cyan) 55%, transparent); }
+
+/* ---- 8. Post cards and the Spoiler Shield ------------------------------- */
+
+/* The like count ticks up (or down) when you like a post. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .like-count.tick { display: inline-block; animation: ptTick .32s cubic-bezier(.2, .8, .3, 1.3); }
+  @keyframes ptTick { 0% { transform: translateY(6px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+}
+
+/* "Cover spoiler again": put the cover back after you have read it. */
+.spoiler-recover {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  margin: 2px 16px 10px; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 800;
+  color: var(--text-dim); background: rgba(255, 255, 255, .05); border: 1.5px dashed color-mix(in srgb, var(--accent-pink) 55%, transparent);
+  transition: color .15s ease, background .15s ease;
+}
+.spoiler-recover svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.spoiler-recover:hover { color: var(--text); background: rgba(255, 255, 255, .09); }
+.spoiler-recover:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+html[data-spoilers="show"] .spoiler-recover { display: none; }
+
+/* A covered comment can be hidden again too. */
+.cm-spoil-hide {
+  all: unset; box-sizing: border-box; cursor: pointer; display: inline-block; margin: 0 6px 4px 0; padding: 1px 8px; border-radius: 99px;
+  font-size: 11px; font-weight: 800; color: var(--text-dim); border: 1px solid var(--border);
+}
+.cm-spoil-hide:hover { color: var(--text); border-color: var(--accent-pink); }
+.cm-spoil-hide:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+
+/* Revealing a spoiler un-blurs it instead of snapping. */
+.post .post-title, .post .post-text, .theory-text { transition: filter .35s ease; }
+
+/* The cover itself: faint slow stripes, so a covered card looks deliberate, not broken. */
+.spoiler-cover::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: .5;
+  background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--accent-pink) 10%, transparent) 14px 28px);
+  background-size: 40px 40px;
+}
+.spoiler-cover strong, .spoiler-cover span { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .spoiler-cover::after { animation: ptStripes 3.6s linear infinite; }
+  @keyframes ptStripes { to { background-position: 40px 0; } }
+}
+
+/* Cards ease up into view as they scroll in (browsers with scroll-driven animations only;
+   everywhere else they are simply there). It stops after entry, so hover lifts still work. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    html:not([data-motion="reduced"]) main .feed > .post {
+      animation: ptRise linear backwards; animation-timeline: view(); animation-range: entry 0% entry 28%;
+    }
+    @keyframes ptRise { from { opacity: 0; transform: translateY(18px); } }
+  }
+}
+
+/* Print: none of the new chrome. */
+@media print {
+  .pt-progress, .pt-net, .pt-mission, .fe, .gr, .ks-pending, .spoiler-recover, .stb-ring { display: none !important; }
+}
+
+/* ---- 9. Feed type filter (All / Posts / Videos / Polls / Theories / Events) --------- */
+
+.ft {
+  display: flex; gap: 8px; margin: 10px 14px 6px; padding: 2px 2px 4px;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+}
+.ft::-webkit-scrollbar { display: none; }
+.lp-feedcol .ft { margin-left: 0; margin-right: 0; }
+.sv-wrap .ft { margin: 0 0 12px; }
+.ft-chip {
+  --a: var(--text); --b: var(--text);
+  flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px;
+  font-size: 13.5px; font-weight: 800; text-decoration: none; white-space: nowrap; color: var(--text-dim);
+  background: var(--surface); border: 1.5px solid var(--border);
+  transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.ft-chip svg { flex: none; color: var(--a); }
+.ft-chip:hover { color: var(--text); border-color: color-mix(in srgb, var(--a) 60%, var(--border)); }
+.ft-chip:active { transform: scale(.97); }
+.ft-chip:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.ft-chip.on {
+  color: #0d0b10; border-color: transparent; background: linear-gradient(135deg, var(--a), var(--b));
+  box-shadow: 0 8px 20px -10px var(--a);
+}
+.ft-chip.on svg { color: currentColor; }
+/* "All" has no format colour: it is the plain white pill, like the For you / Following tabs. */
+.ft-chip:first-child.on { color: var(--on-accent); background: var(--text); box-shadow: none; }
+.ft-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 4px; }
+@media print { .ft { display: none !important; } }
+
+/* ---- 10. Saved page tabs (All / Posts / Reels / YouTube / Polls / Theories / Events) ----- */
+
+.svt {
+  display: flex; gap: 6px; margin: 0 0 14px; padding: 0 2px; overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; border-bottom: 1px solid var(--border);
+}
+.svt::-webkit-scrollbar { display: none; }
+.svt-tab {
+  --a: var(--text); --b: var(--text);
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 11px 12px 13px;
+  font-size: 14px; font-weight: 800; text-decoration: none; white-space: nowrap; color: var(--text-dim);
+  transition: color .15s ease;
+}
+.svt-tab svg { flex: none; color: var(--a); }
+.svt-tab em {
+  font-style: normal; min-width: 22px; padding: 1px 7px; border-radius: 99px; text-align: center;
+  font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.svt-tab:hover { color: var(--text); }
+.svt-tab.zero { opacity: .55; }
+.svt-tab.zero:hover { opacity: 1; }
+.svt-tab:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: -2px; border-radius: 10px; }
+/* The open tab: bright label and an underline in the format's colour. */
+.svt-tab.on { color: var(--text); }
+.svt-tab.on::after {
+  content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, var(--a), var(--b));
+}
+.svt-tab.on em { color: #0d0b10; background: linear-gradient(135deg, var(--a), var(--b)); }
+.svt-tab:first-child.on em { color: var(--on-accent); background: var(--text); }
+.svt-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.svt-bar .sv-count { margin: 0; }
+.svt-play {
+  display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 800;
+  text-decoration: none; color: #0d0b10; background: linear-gradient(135deg, #2de2c5, #1b6fa8);
+  box-shadow: 0 8px 20px -10px #2de2c5; transition: transform .15s ease;
+}
+.svt-play svg { width: 14px; height: 14px; fill: currentColor; }
+.svt-play:active { transform: scale(.97); }
+.svt-play:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+.svt-cap { margin: 14px 0 0; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--text-dim); }
+@media print { .svt, .svt-play { display: none !important; } }

@@ -491,3 +491,77 @@ A short header and one tab per kind of post. The header is the banner, name, act
 - Spoiler posts are blurred in the cards; pinned, scheduled and private posts are labelled (for the owner).
 - On your own profile, Upgrade, Settings and Log out live in a small "..." menu.
 - Files: `components/ProfileView.js` (header + tab state), `components/profile/*`, `app/profile.css`.
+
+## Touches: small polish everywhere (`app/touches.css`, `components/touches/`)
+
+A pile of small features, loaded last so nothing else has to change. All motion respects `prefers-reduced-motion` and City Look's reduced-motion choice.
+
+**Site-wide**
+- **Reading progress bar** along the top of every page, and the **scroll-to-top button gets a ring** that fills as you read (both driven by `--scroll-p` on `<html>`, kept by `components/touches/PageTouches.js`).
+- **Header lifts** (firmer background, soft shadow) once you scroll.
+- **Offline pill** ("You're offline") and a "Back online" flash.
+- **Unread count in the tab title**, `(2) Messages · GTAFanbase`, from the same check-in the nav badge uses; it survives page changes.
+- **Themed 404** (`app/not-found.js`, with a search box) and **error page** (`app/error.js`, "Try again").
+- **Install as an app**: `app/manifest.js` (icon, standalone, long-press shortcuts for Create / Messages / Events / Videos), a browser-bar `themeColor`, and Open Graph / Twitter card defaults for pasted links.
+- Anchor jumps stop under the sticky header, `accent-color` and caret colour follow the theme, no tap delay on controls, tabular numbers on counts, long links wrap, avatars nudge on hover, menus pop open.
+- A hidden cheat code: up up down down left right left right B A.
+
+**Home and feeds**
+- **Greeting** ("Good evening, name" with today's date, on the visitor's own clock).
+- **"You're all caught up"** end-cap under any feed of 4+ posts: back to top, refresh, and the small-print links.
+- Cards **ease in** as they scroll into view (browsers with scroll-driven animations only).
+
+**Search**
+- **Recent searches** (this device only, `lib/recent-searches.js`): chips on the empty `/search` page with remove and clear-all.
+
+**Keyboard** (`components/KeyboardShortcuts.js`)
+- `j` / `k` step through posts with a ring round the current one, `t` goes back to the top, and pressing `g` shows a "then h c e m v s w" reminder. The shortcuts list now shows "or" between alternatives (it used to show "then" for the Videos keys).
+
+**Posts and the Spoiler Shield**
+- **Cover spoiler again** on a revealed post, and **Hide** on a revealed spoiler comment. Revealing un-blurs smoothly, and covers have faint animated stripes.
+- Exact date and time as a tooltip on "2h", a tick animation on the like count, and a small vibration on like / save on phones that support it (`lib/haptics.js`).
+
+Tests: `tests/recent-searches.test.mjs`.
+
+## Filter by post type (`lib/feed-types.js`, `components/FeedTypeFilter.js`)
+
+A row of chips under the feed tabs: **All · Posts · Videos · Polls · Theories · Events**. Pick one and the feed shows only that format.
+
+- **Where**: the home feed (both For you and Following) and `/saved`. It lives in the URL (`/?type=poll`, `/?feed=following&type=video`, `/saved?type=event`), so it can be shared, the back button works, and it needs no JavaScript to apply. The For you / Following tabs keep the chosen format when you switch.
+- **How it's fetched**: `fetchPosts`, `fetchPostsByUids` and `fetchForYou` take a `type`. Firestore can't filter by type and sort by date without a composite index (this app avoids them), so a filtered feed reads a bigger slice of the newest posts (4x the feed length, max 200) and filters it in memory. The For you ranking runs *after* the filter, so a filtered feed is still ranked. The Leak Filter, blocked members and private posts apply exactly as before.
+- **While filtered**: the recommended-picks row steps aside (it mixes every format and is not fetched), `/?type=...` points its canonical URL at `/`, and an empty result shows "No polls to show" with *Show everything* and *Create one*.
+- **Saved** has its own tabs, below.
+- Unknown values (`?type=banana`) are treated as All. Tests: `tests/feed-types.test.mjs`.
+
+## Saved page tabs (`/saved`, `lib/saved-tabs.js`, `components/SavedTabs.js`)
+
+Your bookmarks, separated by what they are: **All · Posts · Reels · YouTube · Polls · Theories · Events**, each tab with a count.
+
+- **Reels vs YouTube**: an uploaded clip (`media.kind === "storage"`) is a Reel and opens in the Videos player; a post that links a YouTube video is "YouTube". Reels are bookmarked with the same save button as everything else (`/api/posts/save`), so they were always on this page; now they have a tab, and the Reels tab has **Play in Videos**, which starts the player on your newest saved reel.
+- **In the URL**: `/saved?tab=reel`, so a tab can be bookmarked and the back button works. Unknown values fall back to All.
+- **One read**: the page loads your saved posts once (newest 100) and sorts them into tabs in memory, so every count comes from the same read and there is no new index. When you hit 100 the page says so.
+- Tabs with nothing in them stay, dimmed, so the bar doesn't jump; opening one explains how to fill it. Tests: `tests/saved-tabs.test.mjs`.
+
+## Discover: shops and extras reachable from everywhere (`lib/discover.js`, `components/Discover.js`, `app/discover.css`)
+
+Perks shop, Gift shop, Advertise, World Hub, Saved posts and Upgrade used to be promoted mainly in the side menu. They now have front doors in the places people actually look. One list (`DOORS` in `lib/discover.js`) holds each title, one-line pitch, link, accent and icon, and `SPOTS` says which doors each place shows, so a rename or a price change is made once. The Advertise pitch reads its price from `AD_RATES`, so it can't drift from the real rate.
+
+| Where | What shows |
+|---|---|
+| **Settings** | A "Shops and extras" list under the panels: Perks, Gifts, Advertise, World Hub, Saved. The Perks row says how many you own. Phones show it on the panel list; desktops keep it beside whichever panel is open. |
+| **Your own profile** | One "Your corner" card (Perks, Gifts, Advertise, World Hub) under the hero and Gifts received, so the shortcuts read as one block. Saved posts is in the ⋯ menu next to Upgrade and Settings. Other people's profiles are unchanged (they already have Gift and Send a gift). |
+| **End of a feed** | "While you're here": Perks, Gifts and Advertise chips in the "You're all caught up" end-cap (home, Following, search and anywhere else `FeedEnd` is used). |
+| **Foot of the other pages** | "More from GTAFanbase" tiles on Perks, Gifts, Advertise, Upgrade, World Hub, Saved, Events and Communities. A page never lists itself. |
+
+- **Three looks, one component**: `tiles` (grid), `rows` (settings list with chevrons), `chips` (one line of pills). `card` puts a group of tiles on one surface. `notes` swaps a door's one-liner.
+- **No state, no extra reads**: it is plain links (`prefetch={false}`, so it never preloads the heavy pages), so it works in server pages and client components alike.
+- **Themed**: colours come from the City Look variables; motion respects reduced-motion and City Look's reduced-motion choice.
+- To promote a door somewhere new, add a spot to `SPOTS` and drop `<Discover spot="…" />` in. Tests: `tests/discover.test.mjs` (every spot lists real doors, no repeats, no page lists itself, Settings, the profile and the feed end all reach the shops and Advertise).
+
+## Welcome tour (`/welcome`)
+
+Every new account (email signup or first Google sign-in) goes through a 3-step full-screen tour once: **The big picture → Explore the city → Make it yours**. Back and Next only, no skip or close button. The last step has a Terms and Privacy tick box; **Enter Leonida** stays asleep until it is ticked, then calls `POST /api/onboarding` (which refuses without `acceptTerms: true` and saves `termsAcceptedAt` + `termsVersion` on `users/{uid}`) and opens the feed.
+
+- **State:** new accounts are saved with `onboarded: false` on `users/{uid}` (older accounts have no field and count as done). A `gta6fb_onboard` cookie mirrors it; the root layout mounts `components/onboarding/OnboardingGate.js`, which sends every page except the info pages (terms, privacy, help ...) to `/welcome`. Log in and Google sign-in re-check the account, log out clears the cookie. Rules live in `lib/onboarding.js` (tested in `tests/onboarding.test.mjs`).
+- **Words:** `components/onboarding/content.js`. **Layout:** `components/onboarding/Onboarding.js`. **Look:** `app/welcome/welcome.css` (every rule starts with `.ob`).
+- **Replay:** a finished member can open `/welcome` again; finishing just returns them home.

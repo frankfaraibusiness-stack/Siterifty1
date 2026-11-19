@@ -398,23 +398,75 @@
 .auth-collapse.pt8 .auth-collapse-pad { padding-top: 13px; }
 .auth-collapse.pt12 .auth-collapse-pad { padding-top: 17px; }
 
-/* Google button */
-.auth-google { position: relative; min-height: 46px; display: flex; justify-content: center; }
-.auth-google-box { width: 100%; display: flex; justify-content: center; min-height: 46px; }
-.auth-google-box iframe { color-scheme: normal; }
-.auth-google-skeleton {
-  position: absolute; inset: 0; border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.1), rgba(255,255,255,.05));
-  background-size: 200% 100%; animation: authShimmer 1.2s linear infinite;
+/* Google button: our own Vice City look. Google's real (invisible) button sits
+   on top so the tap still goes through Google's secure sign-in. */
+.auth-google { position: relative; max-width: 400px; margin: 0 auto; }
+.auth-gbtn {
+  --vc-a: var(--accent-pink); --vc-b: var(--accent-cyan);
+  all: unset; box-sizing: border-box; position: relative; overflow: hidden; width: 100%; height: 52px;
+  display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 20px 0 12px;
+  border-radius: 999px; border: 1.5px solid transparent; cursor: pointer;
+  font-family: inherit; font-size: 15.5px; font-weight: 800; letter-spacing: .2px; color: var(--text);
+  background:
+    linear-gradient(var(--surface-raised), var(--surface-raised)) padding-box,
+    linear-gradient(110deg, color-mix(in srgb, var(--vc-a) 55%, transparent), color-mix(in srgb, #ff9a3d 45%, transparent), color-mix(in srgb, var(--vc-b) 55%, transparent)) border-box;
+  box-shadow: 0 12px 26px -18px color-mix(in srgb, var(--vc-a) 70%, transparent);
+  transition: box-shadow .25s ease, transform .15s ease, background-position .3s ease, opacity .2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-@keyframes authShimmer { to { background-position: -200% 0; } }
-.auth-google-error { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12.5px; color: var(--text-dim); text-align: center; }
+.auth-gbtn::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s ease;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--vc-a) 14%, transparent), color-mix(in srgb, #ff9a3d 8%, transparent), color-mix(in srgb, var(--vc-b) 14%, transparent));
+}
+.auth-gbtn::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 38%; pointer-events: none; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .16), transparent); transition: left .6s ease;
+}
+.auth-gbtn-g {
+  flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #fff;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, .5);
+}
+.auth-gbtn-g svg { width: 18px; height: 18px; display: block; }
+.auth-gbtn-label { position: relative; }
+
+.auth-google:hover .auth-gbtn:not(:disabled), .auth-gbtn.is-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--vc-a) 12%, transparent), 0 16px 30px -14px color-mix(in srgb, var(--vc-a) 80%, transparent), 0 10px 26px -16px color-mix(in srgb, var(--vc-b) 60%, transparent);
+}
+.auth-google:hover .auth-gbtn::before, .auth-gbtn.is-button:hover::before { opacity: 1; }
+.auth-google:hover .auth-gbtn::after, .auth-gbtn.is-button:hover:not(:disabled)::after { left: 130%; }
+.auth-google:active .auth-gbtn { transform: translateY(1px); }
+.auth-google:focus-within .auth-gbtn, .auth-gbtn.is-button:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+.auth-gbtn.is-loading, .auth-gbtn:disabled { cursor: progress; opacity: .7; }
+.auth-gbtn.is-loading .auth-gbtn-label { animation: authPulse 1.1s ease-in-out infinite; }
+@keyframes authPulse { 50% { opacity: .55; } }
+
+/* Google's real button: invisible, stretched (taller) to cover ours. */
+.auth-ghit {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  opacity: .0001; overflow: hidden; border-radius: 999px; cursor: pointer;
+}
+.auth-ghit > div { transform: scaleY(1.32); transform-origin: center; }
+.auth-ghit iframe { color-scheme: normal; }
+.auth-ghit.is-off { display: none; }
+.auth-google.is-busy .auth-ghit, .auth-google.is-locked .auth-ghit { pointer-events: none; }
+.auth-google.is-busy .auth-gbtn-label { animation: authPulse 1.1s ease-in-out infinite; }
+.auth-google.is-busy .auth-gbtn, .auth-google.is-locked .auth-gbtn { opacity: .75; }
+.auth-google-error { margin: 8px 4px 0; font-size: 12.5px; line-height: 1.4; color: var(--text-dim); text-align: center; }
+.auth-google-error.is-bad { color: #ff8fb0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-gbtn, .auth-gbtn::before, .auth-gbtn::after { transition: none; }
+  .auth-gbtn.is-loading .auth-gbtn-label, .auth-google.is-busy .auth-gbtn-label { animation: none; }
+}
 
 .auth-divider {
   display: flex; align-items: center; gap: 12px; margin: 20px 0;
   font-size: 12.5px; font-weight: 600; color: var(--text-dim);
 }
-.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; }
+.auth-divider::before { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-pink) 50%, var(--border))); }
+.auth-divider::after { background: linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan) 50%, var(--border)), transparent); }
 
 .auth-form { display: flex; flex-direction: column; }
 .auth-field, .auth-field-flat { display: flex; flex-direction: column; gap: 6px; }

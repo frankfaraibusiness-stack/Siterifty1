@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteHeaderClient from "@/components/SiteHeaderClient";
 import PerksShop from "@/components/PerksShop";
+import Discover from "@/components/Discover";
 import ScrollTopButton from "@/components/ScrollTopButton";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserPerks } from "@/lib/user-perks";
@@ -28,6 +29,7 @@ export default async function PerksPage() {
           user={user ? { uid: user.uid, username: user.username } : null}
           initialOwned={owned}
         />
+        <Discover spot="perks" variant="tiles" className="dc-foot" title="More from GTAFanbase" />
       </main>
       <ScrollTopButton />
     </>

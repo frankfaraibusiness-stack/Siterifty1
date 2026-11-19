@@ -25,15 +25,24 @@ import "./cards.css";
 import "./gifts.css";
 import "./desktop.css";
 import "./fullscreen.css";
+import "./toast.css";
 import "./spoilers.css";
+import "./touches.css";
+import "./discover.css";
+import "./access.css";
+import "./desktop-pages.css";
 import { AI_BUBBLE_COOKIE, LOOK_COOKIE, lookToVars, readLookCookie } from "@/lib/look";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { SPOILER_COOKIE, readSpoilerMode } from "@/lib/spoilers";
+import { ACCESS_COOKIE, accessAttrs, readAccessCookie } from "@/lib/access";
+import { ONBOARD_COOKIE } from "@/lib/onboarding";
 import BootScreen from "@/components/BootScreen";
 import AiBubble from "@/components/AiBubble";
+import OnboardingGate from "@/components/onboarding/OnboardingGate";
 import MessageSync from "@/components/messages/MessageSync";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import SkipLink from "@/components/SkipLink";
+import PageTouches from "@/components/touches/PageTouches";
 import CurrencyProvider from "@/components/CurrencyProvider";
 import { getFx } from "@/lib/fx";
 import { siteUrl } from "@/lib/site";
@@ -61,11 +70,28 @@ export const metadata = {
   metadataBase: new URL(siteUrl()),
   title: "GTAFanbase",
   description: "A fan social feed for the world of GTA6 / Leonida.",
+  applicationName: "GTAFanbase",
+  // What shows when a link to the site is pasted into Discord, iMessage, X and friends.
+  openGraph: {
+    type: "website",
+    siteName: "GTAFanbase",
+    title: "GTAFanbase",
+    description: "A fan social feed for the world of GTA6 / Leonida.",
+    images: [{ url: "/banner.webp", width: 1660, height: 513, alt: "GTAFanbase.com: discuss, share, connect" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GTAFanbase",
+    description: "A fan social feed for the world of GTA6 / Leonida.",
+    images: ["/banner.webp"],
+  },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  // Tints the phone's browser bar and status bar to match the page.
+  themeColor: "#1b1925",
   // Stops Android Chrome from auto-zooming the page out to fit a too-wide
   // element (that is what left the feed in a narrow column with an empty strip
   // on the right). Pinch-to-zoom IN still works.
@@ -84,8 +110,12 @@ export default async function RootLayout({ children }) {
   // "Never show the AI bubble" is a cookie, so the page is already right at first paint.
   const aiBubble = jar.get(AI_BUBBLE_COOKIE)?.value === "hide" ? "hide" : "show";
   const signedIn = !!jar.get(SESSION_COOKIE_NAME)?.value;
+  // A brand-new member who has not finished the 3-step welcome tour yet (/welcome).
+  const onboardingPending = signedIn && !!jar.get(ONBOARD_COOKIE)?.value;
   // How this member wants spoiler covers to behave (cover / show / hide), known at first paint.
   const spoilers = readSpoilerMode(jar.get(SPOILER_COOKIE)?.value);
+  // Settings > Access (contrast, underlined links, bigger buttons), also known at first paint.
+  const access = accessAttrs(readAccessCookie(jar.get(ACCESS_COOKIE)?.value));
 
   return (
     <html
@@ -95,13 +125,16 @@ export default async function RootLayout({ children }) {
       data-motion={look.motion}
       data-ai-bubble={aiBubble}
       data-spoilers={spoilers}
+      {...access}
     >
       <body>
         <SkipLink />
         <BootScreen />
         <CurrencyProvider fx={fx}>{children}</CurrencyProvider>
+        <OnboardingGate pending={onboardingPending} />
         <MessageSync signedIn={signedIn} />
         <KeyboardShortcuts />
+        <PageTouches />
         <AiBubble signedIn={signedIn} />
       </body>
     </html>

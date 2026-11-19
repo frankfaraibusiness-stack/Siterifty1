@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteHeaderClient from "@/components/SiteHeaderClient";
 import UpgradePlans from "@/components/UpgradePlans";
+import Discover from "@/components/Discover";
 import PlanCompare from "@/components/PlanCompare";
 import ScrollTopButton from "@/components/ScrollTopButton";
 import { getCurrentUser } from "@/lib/current-user";
@@ -132,6 +133,8 @@ export default async function UpgradePage() {
             ))}
           </div>
         </section>
+
+        <Discover spot="upgrade" variant="tiles" className="dc-foot" title="More from GTAFanbase" />
       </main>
       <ScrollTopButton />
     </>

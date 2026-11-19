@@ -179,7 +179,39 @@ select.ms-input { appearance: none; background-image: linear-gradient(45deg, tra
   .ms-sheet-top { touch-action: auto; padding-top: 6px; }
   .ms-sheet-wrap.is-pop { background: transparent; backdrop-filter: none; align-items: flex-start; justify-content: flex-start; }
   .ms-sheet-wrap.is-pop .ms-sheet { animation: ms-pop .12s ease; box-shadow: 0 18px 50px -10px rgba(0, 0, 0, .75); }
+
+  /* Full-size sheets (chat info, forms) take the whole screen on desktop, like
+     FullScreen: header bar with a back button, one centred column. Small
+     anchored menus above stay popovers. */
+  .ms-sheet-wrap:has(> .ms-sheet-md, > .ms-sheet-lg) { display: block; background: var(--bg); backdrop-filter: none; }
+  .ms-sheet-md, .ms-sheet-lg {
+    --ms-gutter: max(18px, calc((100% - 640px) / 2));
+    position: absolute; inset: 0; width: auto; height: auto; max-height: none;
+    border: 0; border-radius: 0; box-shadow: none; background: var(--bg);
+    animation: ms-fs-in .32s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .ms-sheet-md .ms-sheet-top, .ms-sheet-lg .ms-sheet-top {
+    position: relative; z-index: 2; padding: 0; border-bottom: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(var(--bg-rgb, 27, 25, 37), .86); backdrop-filter: blur(16px) saturate(150%);
+  }
+  .ms-sheet-md .ms-sheet-top::after, .ms-sheet-lg .ms-sheet-top::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; pointer-events: none; opacity: .6;
+    background: linear-gradient(90deg, transparent, var(--lp-violet, #7b2ff7), var(--accent-cyan, #3dd6f5), transparent);
+  }
+  .ms-sheet-md .ms-sheet-head, .ms-sheet-lg .ms-sheet-head { height: 60px; padding: 0 22px 0 14px; gap: 12px; }
+  .ms-sheet-md .ms-sheet-head h2, .ms-sheet-lg .ms-sheet-head h2 { font-size: 18px; letter-spacing: -.3px; }
+  .ms-sheet-md .ms-x, .ms-sheet-lg .ms-x { order: -1; width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .05); }
+  .ms-sheet-md .ms-x:hover, .ms-sheet-lg .ms-x:hover { background: rgba(255, 255, 255, .1); }
+  .ms-sheet-md .ms-x:focus-visible, .ms-sheet-lg .ms-x:focus-visible { outline: 2px solid var(--accent-cyan, #3dd6f5); outline-offset: 2px; }
+  .ms-x .ms-x-back { display: none; }
+  .ms-sheet-md .ms-x .ms-x-close, .ms-sheet-lg .ms-x .ms-x-close { display: none; }
+  .ms-sheet-md .ms-x .ms-x-back, .ms-sheet-lg .ms-x .ms-x-back { display: block; }
+  .ms-sheet-md .ms-sheet-body, .ms-sheet-lg .ms-sheet-body { padding: 18px var(--ms-gutter) 28px; }
+  .ms-sheet-md .ms-sheet-foot, .ms-sheet-lg .ms-sheet-foot { padding: 12px var(--ms-gutter) 14px; }
+  .ms-sheet-md .ms-sheet-foot .ms-btn, .ms-sheet-lg .ms-sheet-foot .ms-btn { flex: none; min-width: 120px; }
+  .ms-sheet-md .ms-sheet-foot .ms-btn.go, .ms-sheet-lg .ms-sheet-foot .ms-btn.go { flex: 1; }
 }
+@keyframes ms-fs-in { from { opacity: 0; transform: translateY(22px) scale(.99); } to { opacity: 1; transform: none; } }
 
 /* menus inside sheets */
 .ms-menu { display: grid; gap: 2px; padding: 4px 0 2px; }
