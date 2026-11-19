@@ -228,8 +228,8 @@ export function RichText({ text, emojiSize = 20 }) {
 // ------------------------------------------------------------- sheet
 const stack = [];
 
-// Bottom sheet on phones, centred dialog on desktop. Pass `anchor` (a
-// DOMRect) to turn it into a small popover next to a button on desktop.
+// Bottom sheet on phones, full screen on desktop (md / lg sizes). Pass `anchor`
+// (a DOMRect) to turn it into a small popover next to a button on desktop.
 export function Sheet({ title, onClose, children, size = "md", className = "", footer, headerExtra, anchor }) {
   useScrollLock(true);
   const ref = useRef(null);
@@ -305,7 +305,8 @@ export function Sheet({ title, onClose, children, size = "md", className = "", f
               <h2>{title}</h2>
               {headerExtra}
               <button type="button" className="ms-x" onClick={onClose} aria-label="Close">
-                <Icon.Close size={18} />
+                <span className="ms-x-close"><Icon.Close size={18} /></span>
+                <span className="ms-x-back"><Icon.Back size={18} /></span>
               </button>
             </header>
           )}

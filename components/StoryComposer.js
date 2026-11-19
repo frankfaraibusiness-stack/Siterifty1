@@ -37,7 +37,7 @@ function AudIcon({ id }) {
 // video of any length, trim video to the best 15 seconds, add a caption, choose
 // who can watch and whether people can reply, then share. Stories stay up for
 // 24 hours.
-export default function StoryComposer({ onClose, onPosted }) {
+export default function StoryComposer({ onClose, onPosted, defaults }) {
   useScrollLock(true);
 
   const root = useRef(null);
@@ -52,8 +52,8 @@ export default function StoryComposer({ onClose, onPosted }) {
   const [trim, setTrim] = useState({ start: 0, end: 0 });
   const [thumbs, setThumbs] = useState([]);
   const [caption, setCaption] = useState("");
-  const [audience, setAudience] = useState(DEFAULT_STORY_AUDIENCE);
-  const [replies, setReplies] = useState(true);
+  const [audience, setAudience] = useState(defaults?.audience || DEFAULT_STORY_AUDIENCE); // Settings > Stories
+  const [replies, setReplies] = useState(defaults?.replies ?? true);
 
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false); // reading the picked file

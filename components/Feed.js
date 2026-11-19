@@ -2,6 +2,7 @@ import PostCard from "./PostCard";
 import AdSlot from "./ads/AdSlot";
 import { adGap } from "@/lib/ads";
 import { issueTrk } from "@/lib/track-token";
+import FeedEnd from "./touches/FeedEnd";
 
 // `adPlacement` (e.g. "feed") turns on sponsored cards: one after every 4 to 5
 // posts, never after the last post. Each slot fetches its own single ad when it
@@ -23,5 +24,10 @@ export default function Feed({ posts, adPlacement, track }) {
       gap = adGap(post.id);
     }
   });
-  return <section className="feed">{out}</section>;
+  return (
+    <section className="feed">
+      {out}
+      {posts.length >= 4 && <FeedEnd count={posts.length} />}
+    </section>
+  );
 }

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import PriceNote from "./PriceNote";
 import { useMoney } from "./CurrencyProvider";
 import FullScreen from "./FullScreen";
+import Toast, { useToast } from "./Toast";
 import {
   PERKS,
   PERKS_FREE_WHILE_TESTING,
@@ -309,14 +310,8 @@ export default function PerksShop({ user, initialOwned }) {
   const [owned, setOwned] = useState(() => cleanPerks(initialOwned));
   const [openId, setOpenId] = useState(null);
   const [busy, setBusy] = useState("");
-  const [toast, setToast] = useState("");
+  const { toast, show, hide } = useToast();
   const [authOpen, setAuthOpen] = useState(false);
-
-  useEffect(() => {
-    if (!toast) return undefined;
-    const t = setTimeout(() => setToast(""), 2800);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const open = PERKS.find((p) => p.id === openId) || null;
 
@@ -336,10 +331,10 @@ export default function PerksShop({ user, initialOwned }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Couldn’t unlock that perk.");
       setOwned(cleanPerks(data.perks));
-      setToast(`${perk.name} unlocked.`);
+      show(`${perk.name} unlocked.`, "success");
       router.refresh();
     } catch (err) {
-      setToast(err.message || "Couldn’t unlock that perk.");
+      show(err.message || "Couldn’t unlock that perk.", "error");
     } finally {
       setBusy("");
     }
@@ -434,11 +429,7 @@ export default function PerksShop({ user, initialOwned }) {
         />
       )}
 
-      {toast && (
-        <div className="pf-toast" role="status">
-          {toast}
-        </div>
-      )}
+      <Toast toast={toast} onClose={hide} />
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
     </>
   );
