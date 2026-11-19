@@ -5,6 +5,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { signInWithGoogleIdToken } from "@/lib/identity-toolkit";
 import { createSessionToken, sessionCookieOptions } from "@/lib/session";
 import { DEFAULT_PLAN, isPlanId } from "@/lib/plans";
+import { ONBOARD_COOKIE, ONBOARD_COOKIE_VALUE, needsOnboarding, onboardCookieOptions } from "@/lib/onboarding";
 
 export const runtime = "nodejs";
 
@@ -30,6 +31,8 @@ export async function POST(request) {
     const ref = db.collection("users").doc(google.uid);
     const snap = await ref.get();
     let username = snap.exists ? snap.data().username || null : null;
+    // A brand-new profile does the welcome tour once; so does an unfinished one.
+    let pending = snap.exists && needsOnboarding(snap.data());
 
     if (!username) {
       // First Google sign-in (or an older account with no profile yet): give
@@ -45,18 +48,26 @@ export async function POST(request) {
           // New accounts start on the free plan; keep a plan if one already exists.
           plan: isPlanId(snap.exists ? snap.data().plan : null) ? snap.data().plan : DEFAULT_PLAN,
           hasAvatar: false,
+          onboarded: false,
           createdAt: FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
+      pending = true;
     }
 
     const token = await createSessionToken({ uid: google.uid, email: google.email, username });
     const cookieStore = await cookies();
     const { name, ...options } = sessionCookieOptions();
     cookieStore.set(name, token, options);
+    if (pending) {
+      const { name: onboardName, ...onboardOptions } = onboardCookieOptions();
+      cookieStore.set(onboardName, ONBOARD_COOKIE_VALUE, onboardOptions);
+    } else {
+      cookieStore.delete(ONBOARD_COOKIE);
+    }
 
-    return NextResponse.json({ ok: true, uid: google.uid, username, isNewUser: google.isNewUser });
+    return NextResponse.json({ ok: true, uid: google.uid, username, isNewUser: google.isNewUser, onboarding: pending });
   } catch (err) {
     return NextResponse.json({ error: mapError(err) }, { status: 401 });
   }

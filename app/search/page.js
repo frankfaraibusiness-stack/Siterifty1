@@ -4,6 +4,7 @@ import SearchBar from "@/components/SearchBar";
 import SearchPostCard from "@/components/SearchPostCard";
 import SearchPersonCard from "@/components/SearchPersonCard";
 import ScrollTopButton from "@/components/ScrollTopButton";
+import RecentSearches from "@/components/touches/RecentSearches";
 import { HashIcon, SearchIcon } from "@/components/icons";
 import { getCurrentUser } from "@/lib/current-user";
 import { searchEverything, getDiscover } from "@/lib/search-data";
@@ -83,8 +84,8 @@ export default async function SearchPage({ searchParams }) {
     <>
       <SiteHeaderClient user={user} />
 
-      <main className="page-content">
-        <div className="sr-pad">
+      <main className="page-content sr-wrap">
+        <div className="sr-pad sr-top">
           <h1 className="sr-title">Search</h1>
           <SearchBar defaultValue={query} type={type} autoFocus={!hasQuery} />
 
@@ -115,7 +116,7 @@ export default async function SearchPage({ searchParams }) {
         </div>
 
         {showPeople && (
-          <section className="sr-section sr-pad">
+          <section className={`sr-section sr-pad sr-people-sec${showPosts ? " sr-side" : " sr-full"}`}>
             {type === "all" && <h2 className="sr-section-title">People</h2>}
             <div className="sr-people">
               {peopleShown.map((p) => (
@@ -131,7 +132,7 @@ export default async function SearchPage({ searchParams }) {
         )}
 
         {showPosts && (
-          <section className="sr-section">
+          <section className="sr-section sr-posts-sec">
             {type === "all" && <h2 className="sr-section-title sr-pad">Posts</h2>}
             <div className="feed">
               {posts.map((post) => (
@@ -153,6 +154,12 @@ export default async function SearchPage({ searchParams }) {
                 username.
               </p>
             </div>
+          </div>
+        )}
+
+        {!hasQuery && (
+          <div className="sr-pad">
+            <RecentSearches />
           </div>
         )}
 

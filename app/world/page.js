@@ -3,6 +3,7 @@ import MainNav from "@/components/MainNav";
 import { getCurrentUser } from "@/lib/current-user";
 import { getAdminDb } from "@/lib/firebase-admin";
 import WorldHub from "@/components/world/WorldHub";
+import Discover from "@/components/Discover";
 import "./world.css";
 
 export const dynamic = "force-dynamic";
@@ -25,5 +26,5 @@ export default async function WorldPage() {
     return { id: d.id, ...data, createdAt: data.createdAt?.toMillis?.() || 0, comments };
   }));
   const profile = userSnap?.data() || {};
-  return <><SiteHeaderClient user={user} /><MainNav /><WorldHub user={user ? { uid: user.uid, username: user.username } : null} items={items} characterCollection={profile.gta6Characters || {}} reputation={profile.gta6Reputation || 0} /></>;
+  return <><SiteHeaderClient user={user} /><MainNav /><WorldHub user={user ? { uid: user.uid, username: user.username } : null} items={items} characterCollection={profile.gta6Characters || {}} reputation={profile.gta6Reputation || 0} /><div className="dc-outer"><Discover spot="world" variant="tiles" className="dc-foot" title="More from GTAFanbase" /></div></>;
 }

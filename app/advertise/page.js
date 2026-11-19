@@ -2,8 +2,10 @@ import Link from "next/link";
 import SiteHeaderClient from "@/components/SiteHeaderClient";
 import ScrollTopButton from "@/components/ScrollTopButton";
 import AdsApp from "@/components/ads/AdsApp";
+import Discover from "@/components/Discover";
 import { getCurrentUser } from "@/lib/current-user";
 import { listMine, listOrders } from "@/lib/ads-data";
+import { BackIc } from "@/components/ads/AdIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +25,9 @@ export default async function AdvertisePage() {
     <>
       <SiteHeaderClient user={user} />
       <main className="am-page">
-        <Link href="/" className="up-back">← Back to the feed</Link>
+        <Link href="/" className="up-back"><BackIc size="15px" /> Back to the feed</Link>
         <AdsApp user={signedIn ? { uid: user.uid, username: user.username } : null} initialAds={ads} initialOrders={orders} />
+        <Discover spot="advertise" variant="tiles" className="dc-foot" title="More from GTAFanbase" />
       </main>
       <ScrollTopButton />
     </>

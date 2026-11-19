@@ -562,3 +562,58 @@ a.cm-link-btn { text-decoration: none; }
 /* Keep the last comment from hiding behind the floating button. */
 .cm-sheet:has(.cm-gift-fab) .cm-list { padding-bottom: 66px; }
 @media (prefers-reduced-motion: reduce) { .cm-gift-fab { transition: none; animation: none; } .cm-gift-fab .cm-gift-fab-label { transition: none; } }
+
+/* ===== Premium framing: every gift sits in a frame that matches its rarity =====
+   Common stays calm; the pricier the gift, the richer the tile, the glow and the card. */
+.gf-tile {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--r) 30%, transparent);
+  background:
+    radial-gradient(70% 70% at 50% 40%, color-mix(in srgb, var(--g) 50%, transparent), transparent 75%),
+    radial-gradient(90% 55% at 50% 100%, color-mix(in srgb, var(--r) 28%, transparent), transparent 72%),
+    linear-gradient(160deg, color-mix(in srgb, var(--g) 26%, var(--surface-raised)), var(--surface));
+}
+/* A soft pool of light under the gift, so it looks placed rather than floating. */
+.gf-floor {
+  position: absolute; left: 50%; bottom: 11%; width: 54%; height: 11%; translate: -50% 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--r) 60%, rgba(0,0,0,.55)), transparent);
+  filter: blur(3px); opacity: .85;
+}
+.gf-tile-lg .gf-floor { bottom: 13%; height: 9%; }
+/* Legendary and mythic gifts get a few twinkles on top of the aura. */
+.gf-spark {
+  position: absolute; z-index: 2; width: 7px; height: 7px; pointer-events: none; opacity: 0;
+  background: color-mix(in srgb, var(--r) 35%, #fff);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  animation: gfTwinkle 2.8s ease-in-out infinite;
+}
+.gf-spark-a { left: 20%; top: 22%; }
+.gf-spark-b { right: 18%; top: 32%; width: 9px; height: 9px; animation-delay: .9s; }
+.gf-spark-c { left: 28%; bottom: 26%; width: 5px; height: 5px; animation-delay: 1.7s; }
+.gf-r-mythic .gf-spark { animation-duration: 2s; }
+@keyframes gfTwinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+/* Custom artwork (see GIFT_ART in lib/gifts.js). Sized by the parent's font-size, like an emoji. */
+.gf-art { display: block; width: 1.12em; height: 1.12em; object-fit: contain; pointer-events: none; -webkit-user-drag: none; user-select: none; }
+
+/* The shop card: a rarity-coloured edge, glowing for the top two tiers. Hover still wins. */
+.gf-card-rare { border-color: color-mix(in srgb, var(--r) 32%, var(--border)); }
+.gf-card-epic { border-color: color-mix(in srgb, var(--r) 45%, var(--border)); }
+.gf-card-legendary { border-color: color-mix(in srgb, var(--r) 60%, var(--border)); box-shadow: 0 14px 30px -24px var(--r); }
+.gf-card-mythic { border-color: color-mix(in srgb, var(--r) 75%, var(--border)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--r) 28%, transparent), 0 16px 34px -22px var(--r); }
+
+/* The rarity tag: legendary and mythic are filled and lit. */
+.gf-rarity-legendary, .gf-rarity-mythic {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--r) 34%, rgba(20,16,31,.82)), rgba(20,16,31,.82));
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--r) 60%, transparent);
+}
+
+/* Profile strip: the gift sits on a glow disc; rare+ get a rarity edge. */
+.pf-gift-emoji { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--r) 30%, transparent), transparent 70%); }
+.pf-gift-rare { border-color: color-mix(in srgb, var(--r) 36%, var(--border)); }
+.pf-gift-epic, .pf-gift-legendary, .pf-gift-mythic { border-color: color-mix(in srgb, var(--r) 60%, var(--border)); box-shadow: 0 10px 24px -18px var(--r); }
+
+/* Comments: rare+ gifts get a rarity edge too. */
+.cm-gift-rare { border-color: color-mix(in srgb, var(--r) 40%, var(--border)); }
+.cm-gift-epic, .cm-gift-legendary, .cm-gift-mythic { border-color: color-mix(in srgb, var(--r) 65%, var(--border)); background: linear-gradient(135deg, color-mix(in srgb, var(--r) 18%, transparent), transparent 85%); }
+
+@media (prefers-reduced-motion: reduce) { .gf-spark { animation: none; opacity: .8; } }

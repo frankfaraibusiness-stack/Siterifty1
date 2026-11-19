@@ -3,6 +3,7 @@ import ScrollTopButton from "@/components/ScrollTopButton";
 import WalletCard from "@/components/gifts/WalletCard";
 import Stepper from "@/components/gifts/Stepper";
 import GiftsShop from "@/components/gifts/GiftsShop";
+import Discover from "@/components/Discover";
 import { getCurrentUser } from "@/lib/current-user";
 import { getWalletMills, previewReceiver } from "@/lib/gifts-data";
 import {
@@ -103,6 +104,8 @@ export default async function GiftsPage({ searchParams }) {
             <span>The gift price plus a fixed $0.10 and 5% tax. No card needed.</span>
           </div>
         </section>
+
+        <Discover spot="gifts" variant="tiles" className="dc-foot" title="More from GTAFanbase" />
       </main>
       <ScrollTopButton />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />

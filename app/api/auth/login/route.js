@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { signInWithPassword } from "@/lib/identity-toolkit";
 import { createSessionToken, sessionCookieOptions } from "@/lib/session";
+import { ONBOARD_COOKIE, ONBOARD_COOKIE_VALUE, needsOnboarding, onboardCookieOptions } from "@/lib/onboarding";
 
 export async function POST(request) {
   try {
@@ -19,9 +20,12 @@ export async function POST(request) {
 
     // Username lives in Firestore; fall back to the legacy custom claim / displayName.
     let username = null;
+    let pending = false;
     try {
       const doc = await getAdminDb().collection("users").doc(user.uid).get();
       username = doc.exists ? doc.data().username || null : null;
+      // Left the welcome tour halfway (maybe on another device)? It picks up again.
+      pending = doc.exists && needsOnboarding(doc.data());
     } catch {}
     username = username || user.claimUsername || user.displayName || null;
 
@@ -29,8 +33,14 @@ export async function POST(request) {
     const cookieStore = await cookies();
     const { name, ...options } = sessionCookieOptions();
     cookieStore.set(name, token, options);
+    if (pending) {
+      const { name: onboardName, ...onboardOptions } = onboardCookieOptions();
+      cookieStore.set(onboardName, ONBOARD_COOKIE_VALUE, onboardOptions);
+    } else {
+      cookieStore.delete(ONBOARD_COOKIE);
+    }
 
-    return NextResponse.json({ ok: true, uid: user.uid, email: user.email, username });
+    return NextResponse.json({ ok: true, uid: user.uid, email: user.email, username, onboarding: pending });
   } catch (err) {
     return NextResponse.json({ error: mapAuthError(err) }, { status: 401 });
   }

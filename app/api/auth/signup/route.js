@@ -5,6 +5,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { signUpWithPassword } from "@/lib/identity-toolkit";
 import { createSessionToken, sessionCookieOptions } from "@/lib/session";
 import { DEFAULT_PLAN } from "@/lib/plans";
+import { ONBOARD_COOKIE_VALUE, onboardCookieOptions } from "@/lib/onboarding";
 
 export async function POST(request) {
   try {
@@ -51,6 +52,8 @@ export async function POST(request) {
       theme: "vice",
       plan: DEFAULT_PLAN,
       hasAvatar: false,
+      // Every new account does the 3-step welcome tour once (/welcome).
+      onboarded: false,
       createdAt: FieldValue.serverTimestamp(),
     });
 
@@ -58,8 +61,10 @@ export async function POST(request) {
     const cookieStore = await cookies();
     const { name, ...options } = sessionCookieOptions();
     cookieStore.set(name, token, options);
+    const { name: onboardName, ...onboardOptions } = onboardCookieOptions();
+    cookieStore.set(onboardName, ONBOARD_COOKIE_VALUE, onboardOptions);
 
-    return NextResponse.json({ ok: true, uid: user.uid, username, email: user.email });
+    return NextResponse.json({ ok: true, uid: user.uid, username, email: user.email, onboarding: true });
   } catch (err) {
     return NextResponse.json({ error: mapError(err) }, { status: 400 });
   }
