@@ -3,16 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Segmented, Toggle } from "../composer/ui";
-import { Block, Notice } from "./bits";
-import { StarIcon } from "./icons";
+import { Block, Notice, Upsell } from "./bits";
+import { LockIcon, StarIcon } from "./icons";
 import { useSettings } from "./context";
 import { EXPOSURE_LABELS, exposureStars } from "@/lib/settings";
 import { MESSAGE_AUDIENCES } from "@/lib/chat-config";
+import { planRank } from "@/lib/plans";
 
 // Privacy and safety. The stars show how much of the city knows you: more
 // stars means more exposure, like a wanted level.
 export default function WantedPanel() {
-  const { prefs, update, setBlocked, notify, openPanel } = useSettings();
+  const { me, prefs, update, setBlocked, notify, openPanel } = useSettings();
+  // "No one" for messages and turning read receipts off need any paid plan (also checked on the server).
+  const paid = planRank(me.plan) > 0;
   const stars = exposureStars(prefs);
   const [label, line] = EXPOSURE_LABELS[stars];
   const isPrivate = prefs.account.isPrivate;
@@ -77,24 +80,34 @@ export default function WantedPanel() {
         <div className="st-aud" role="radiogroup" aria-label="Who can message you">
           {MESSAGE_AUDIENCES.map((a) => {
             const on = prefs.safety.whoCanMessage === a.id;
+            const locked = !paid && a.id === "nobody" && !on;
             return (
               <button
                 key={a.id}
                 type="button"
                 role="radio"
                 aria-checked={on}
-                className={on ? "on" : ""}
+                disabled={locked}
+                className={`${on ? "on" : ""}${locked ? " locked" : ""}`.trim()}
                 onClick={() => update("safety", { whoCanMessage: a.id })}
               >
                 <i aria-hidden="true" />
                 <span>
-                  <b>{a.label}</b>
+                  <b>
+                    {a.label}
+                    {locked && (
+                      <em className="st-paid">
+                        <LockIcon /> Paid
+                      </em>
+                    )}
+                  </b>
                   <small>{a.hint}</small>
                 </span>
               </button>
             );
           })}
         </div>
+        {!paid && <Upsell>“No one” is part of every paid plan.</Upsell>}
       </Block>
 
       <Block title="Chat privacy">
@@ -102,8 +115,10 @@ export default function WantedPanel() {
           label="Read receipts"
           hint="Let people see when you’ve read their message (the coloured ticks and “Seen”)"
           checked={prefs.safety.readReceipts}
+          disabled={!paid && prefs.safety.readReceipts}
           onChange={(readReceipts) => update("safety", { readReceipts })}
         />
+        {!paid && prefs.safety.readReceipts && <Upsell>Turning read receipts off is part of every paid plan.</Upsell>}
         <Toggle
           label="Show when I’m online"
           hint="Show the green dot and “Active” time in chats. Turn it off and you won’t see theirs either."

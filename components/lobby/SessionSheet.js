@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { post } from "@/components/messages/api";
+import { ArrowLeftIcon } from "@/components/icons";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { LOBBY_LIMITS, ROOM_TOPICS } from "@/lib/lobby-config";
 
@@ -38,6 +39,9 @@ export default function SessionSheet({ me, onClose, onCreated }) {
   return (
     <div className="lb-sheet-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <form className="lb-sheet" onSubmit={submit} role="dialog" aria-modal="true" aria-label="Start a session">
+        <button type="button" className="lb-sheet-close" onClick={onClose} aria-label="Back">
+          <ArrowLeftIcon />
+        </button>
         <h2>Start a session</h2>
         <p className="lb-fine">A live room you host. It stays open while people are chatting and closes itself after a few quiet hours.</p>
         <label>

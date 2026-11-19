@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { EyeOffIcon, GiftIcon, HeartIcon, SendIcon, XIcon } from "./icons";
+import { ArrowLeftIcon, EyeOffIcon, GiftIcon, HeartIcon, SendIcon, XIcon } from "./icons";
 import SpoilerText from "./SpoilerText";
 import { SPOILER_TOPICS } from "@/lib/spoilers";
 import PlanBadges from "./PlanBadges";
 import MemberLogoBadge from "./MemberLogoBadge";
 import { formatCount } from "@/lib/format-count";
-import { getGame, giftFxProps, giftMessage, giftsHref, groupPostGifts } from "@/lib/gifts";
+import { getGame, getGift, giftMessage, giftsHref, groupPostGifts, rarityColor } from "@/lib/gifts";
+import GiftGlyph from "./gifts/GiftGlyph";
 import { getPlan, pinHours, planRank } from "@/lib/plans";
 import { FOREVER_PIN_UNTIL_MS, commentMax, hasPerk } from "@/lib/perks";
 import { FlairBadge, FlairName, haloClass } from "./Flair";
@@ -89,13 +90,13 @@ function GiftList({ items, limit = 3 }) {
   return (
     <div className="cm-gifts">
       {shown.map((g) => {
-        const fx = giftFxProps(g.giftId);
+        const rarity = getGift(g.giftId)?.rarity || "common";
         // No message from the sender? Show a friendly default instead.
         const msg = giftMessage(g.giftId, g.note, g.id);
         return (
-          <div className="cm-gift-row" key={g.id} style={{ "--g": getGame(g.game).color }}>
+          <div className={`cm-gift-row cm-gift-${rarity}`} key={g.id} style={{ "--g": getGame(g.game).color, "--r": rarityColor(rarity) }}>
             <span className="cm-gift-emoji" aria-hidden="true">
-              <span className={fx.className} style={fx.style}>{g.emoji}</span>
+              <GiftGlyph giftId={g.giftId} emoji={g.emoji} />
             </span>
             <span className="cm-gift-text">
               <Link href={`/u/${g.from}`} className="cm-gift-from">@{g.from}</Link> gifted{" "}
@@ -137,7 +138,7 @@ function Avatar({ who }) {
   );
 }
 
-// Bottom sheet on phones, centered dialog on desktop. Rendered in a portal
+// Bottom sheet on phones, full-screen on desktop. Rendered in a portal
 // so the post card's hover transform/overflow can't trap it.
 export default function CommentsSheet({ postId, postUser, count, onCountChange, onClose }) {
   const [status, setStatus] = useState("loading");
@@ -815,15 +816,19 @@ export default function CommentsSheet({ postId, postUser, count, onCountChange, 
                 </button>
               ))}
             </div>
+            <span className="cm-esc" aria-hidden="true">Esc</span>
             <button
               type="button"
-              className="pf-icon-btn"
+              className="pf-icon-btn cm-close"
               onClick={close}
               onTouchStart={(e) => e.stopPropagation()}
               aria-label="Close comments"
             >
-              <span className="pf-ico">
+              <span className="pf-ico cm-ico-x">
                 <XIcon />
+              </span>
+              <span className="pf-ico cm-ico-back">
+                <ArrowLeftIcon />
               </span>
             </button>
           </div>

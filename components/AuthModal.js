@@ -35,6 +35,18 @@ function loadGoogle() {
   });
 }
 
+// Google's own four-colour "G" (their brand rules keep it as is).
+function GoogleG() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
+
 // 0-5: how strong the password is.
 function passwordScore(pw) {
   if (!pw) return 0;
@@ -107,9 +119,13 @@ export default function AuthModal({ onClose, initialView = "login" }) {
   const [done, setDone] = useState(null); // null | "login" | "signup"
   const [closing, setClosing] = useState(false);
   const googleBox = useRef(null);
+  const googleWrap = useRef(null);
   const screenRef = useRef(null);
   const closeTimer = useRef(null);
   const [googleState, setGoogleState] = useState(GOOGLE_CLIENT_ID ? "loading" : "off");
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleMsg, setGoogleMsg] = useState(""); // shown right under the Google button
+  const [googleTry, setGoogleTry] = useState(0); // bump to try loading Google again
 
   useScrollLock(true);
 
@@ -166,15 +182,22 @@ export default function AuthModal({ onClose, initialView = "login" }) {
     };
   }, []);
 
-  function passed(kind) {
-    setDone(kind);
-    setTimeout(() => window.location.reload(), kind === "signup" ? 1500 : 1300);
+  // `welcome` = this account still has the 3-step welcome tour to do, so it
+  // goes straight to /welcome instead of reloading the page it was on.
+  function passed(kind, welcome = false) {
+    setDone(welcome ? "signup" : kind);
+    setTimeout(() => {
+      if (welcome) window.location.assign("/welcome");
+      else window.location.reload();
+    }, kind === "signup" || welcome ? 1500 : 1300);
   }
 
   async function handleGoogleCredential(response) {
     setError("");
     setSuccess("");
+    setGoogleMsg("");
     setLoading(true);
+    setGoogleBusy(true);
     try {
       const res = await fetch("/api/auth/google", {
         method: "POST",
@@ -183,19 +206,33 @@ export default function AuthModal({ onClose, initialView = "login" }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error || "Google sign-in failed. Try again.");
+        setGoogleMsg(data.error || "Google sign-in failed. Try again.");
         setLoading(false);
+        setGoogleBusy(false);
         return;
       }
-      passed("login");
+      passed("login", !!data.onboarding);
     } catch {
-      setError("Network error. Try again.");
+      setGoogleMsg("Network error. Try again.");
       setLoading(false);
+      setGoogleBusy(false);
     }
   }
 
-  // Draw Google's own button whenever the log in / sign up view is showing
-  // (it isn't needed on the forgot-password view).
+  // Tapping our themed button when Google isn't ready: say why, or try again.
+  function googleFallback() {
+    if (googleState === "off") {
+      setGoogleMsg("Google sign-in isn’t switched on for this site yet.");
+      return;
+    }
+    setGoogleMsg("");
+    setGoogleState("loading");
+    setGoogleTry((n) => n + 1);
+  }
+
+  // Google's own button is drawn invisibly on top of our themed one (below), so
+  // a tap still goes through Google's real, secure sign-in while the look is
+  // ours. It is only needed while the log in / sign up view is showing.
   const handlerRef = useRef(handleGoogleCredential);
   handlerRef.current = handleGoogleCredential;
   useEffect(() => {
@@ -211,14 +248,14 @@ export default function AuthModal({ onClose, initialView = "login" }) {
           auto_select: false,
           cancel_on_tap_outside: true,
         });
-        const width = Math.max(200, Math.min(400, Math.floor(googleBox.current.clientWidth) || 340));
+        const width = Math.max(200, Math.min(400, Math.floor(googleWrap.current?.clientWidth || googleBox.current.clientWidth) || 340));
         googleBox.current.innerHTML = "";
         google.accounts.id.renderButton(googleBox.current, {
           type: "standard",
           theme: "filled_black",
           size: "large",
           shape: "pill",
-          text: view === "signup" ? "signup_with" : "signin_with",
+          text: "continue_with",
           logo_alignment: "left",
           width,
         });
@@ -228,7 +265,7 @@ export default function AuthModal({ onClose, initialView = "login" }) {
     return () => {
       cancelled = true;
     };
-  }, [view]);
+  }, [view === "forgot", googleTry]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function switchView(next) {
     if (next === view) return;
@@ -254,7 +291,7 @@ export default function AuthModal({ onClose, initialView = "login" }) {
         setError(data.error || "Couldn't create your account.");
         return;
       }
-      passed("signup");
+      passed("signup", true);
     } catch {
       setError("Network error. Try again.");
     } finally {
@@ -277,7 +314,7 @@ export default function AuthModal({ onClose, initialView = "login" }) {
         setError(data.error || "Couldn't sign you in.");
         return;
       }
-      passed("login");
+      passed("login", !!data.onboarding);
     } catch {
       setError("Network error. Try again.");
     } finally {
@@ -486,24 +523,39 @@ export default function AuthModal({ onClose, initialView = "login" }) {
                   </div>
                 </Collapse>
 
-                {googleState !== "off" && (
-                  <>
-                    <div className="auth-google">
-                      <div ref={googleBox} className="auth-google-box" />
-                      {googleState === "loading" && (
-                        <div className="auth-google-skeleton" aria-hidden="true" />
-                      )}
-                      {googleState === "error" && (
-                        <div className="auth-google-error">
-                          Google sign-in couldn&apos;t load. Check your connection.
-                        </div>
-                      )}
+                <div className={`auth-google${googleBusy ? " is-busy" : ""}${loading && !googleBusy ? " is-locked" : ""}`} ref={googleWrap}>
+                  {googleState === "ready" ? (
+                    <div className="auth-gbtn" aria-hidden="true">
+                      <span className="auth-gbtn-g"><GoogleG /></span>
+                      <span className="auth-gbtn-label">{googleBusy ? "Signing you in…" : "Continue with Google"}</span>
                     </div>
-                    <div className="auth-divider">
-                      <span>or use email</span>
-                    </div>
-                  </>
-                )}
+                  ) : (
+                    <button
+                      type="button"
+                      className={`auth-gbtn is-button${googleState === "loading" ? " is-loading" : ""}`}
+                      onClick={googleFallback}
+                      disabled={googleState === "loading" || loading}
+                    >
+                      <span className="auth-gbtn-g"><GoogleG /></span>
+                      <span className="auth-gbtn-label">Continue with Google</span>
+                    </button>
+                  )}
+                  {/* Google's real button: invisible, stretched over ours once it is ready. */}
+                  {GOOGLE_CLIENT_ID && <div className={`auth-ghit${googleState === "ready" ? "" : " is-off"}`} ref={googleBox} />}
+                  {googleState === "error" && !googleMsg && (
+                    <p className="auth-google-error" role="status">
+                      Couldn’t reach Google. Tap the button to try again.
+                    </p>
+                  )}
+                  {googleMsg && (
+                    <p className="auth-google-error is-bad" role="alert" key={googleMsg}>
+                      {googleMsg}
+                    </p>
+                  )}
+                </div>
+                <div className="auth-divider">
+                  <span>or use email</span>
+                </div>
 
                 <form className="auth-form" onSubmit={isLogin ? handleLogin : handleSignup}>
                   <Collapse open={isSignup} className="pb14">
@@ -712,7 +764,7 @@ export default function AuthModal({ onClose, initialView = "login" }) {
               </svg>
             </span>
             <h2>{done === "signup" ? "Welcome to Leonida" : "Welcome back"}</h2>
-            <p>{done === "signup" ? "Your account is ready." : "Taking you in..."}</p>
+            <p>{done === "signup" ? "Your account is ready. Let’s show you around." : "Taking you in..."}</p>
             <span className="auth-passed-bar">
               <i />
             </span>

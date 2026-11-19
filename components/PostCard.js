@@ -14,7 +14,7 @@ import TypeIcon from "./composer/TypeIcon";
 import MediaChip from "./MediaChip";
 import CommentsSheet from "./CommentsSheet";
 import CommentsPreview from "./CommentsPreview";
-import { HeartIcon, CommentIcon, ShareIcon, SaveIcon } from "./icons";
+import { HeartIcon, CommentIcon, ShareIcon, SaveIcon, EyeOffIcon } from "./icons";
 import { formatCount } from "@/lib/format-count";
 import { useViewed } from "@/components/ads/adHooks";
 import { reportClick, reportSeen } from "@/lib/track-client";
@@ -22,6 +22,8 @@ import { TYPES } from "@/lib/post-schema";
 import { giftsHref } from "@/lib/gifts";
 import { isReelVideo, postHrefFor } from "@/lib/post-href";
 import { canCarrySpoiler, topicLabel } from "@/lib/spoilers";
+import { useSpoilerMode } from "@/lib/use-spoiler-mode";
+import { buzz } from "@/lib/haptics";
 
 // A link to a member's profile, or the plain contents when it shouldn't be one.
 function ProfileLink({ user, inert, className, label, children }) {
@@ -46,6 +48,8 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
   const [pulse, setPulse] = useState(false);
   const [saved, setSaved] = useState(post.savedByMe);
   const [burst, setBurst] = useState(false);
+  // Bumped on every like/unlike so the like count can play a small tick animation.
+  const [tick, setTick] = useState(0);
   const [busy, setBusy] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -56,6 +60,7 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
   const [cleared, setCleared] = useState(false); // the author removed a community cover
   const spoilerOn = (!!s.spoiler && !cleared) || flagged;
   const [covered, setCovered] = useState(spoilerOn);
+  const spoilerMode = useSpoilerMode(); // "Show them" members never see covers, so no "cover again" either
   const [menu, setMenu] = useState(false);
   const [note, setNote] = useState("");
   const [gone, setGone] = useState(false);
@@ -94,6 +99,11 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
   const hasTitleBody = post.type === "theory";
   const isEvent = post.type === "event" && !!post.event;
   const topic = topicLabel(s.spoilerTopic);
+  // Hover (or long-press) the "2h" to see the exact date and time. Worked out in the browser, so
+  // the server and client text can differ by time zone, hence suppressHydrationWarning below.
+  const exactTime = post.createdAtMs
+    ? new Date(post.createdAtMs).toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })
+    : undefined;
   const coverHint =
     s.spoiler && !cleared
       ? post.spoilerBy === "community"
@@ -105,6 +115,8 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
     if (busy || preview) return;
     const nowLiked = !liked;
     setLiked(nowLiked);
+    setTick((t) => t + 1);
+    if (nowLiked) buzz(12);
     setLikesCount((c) => (nowLiked ? c + 1 : Math.max(0, c - 1)));
     setPulse(false);
     if (nowLiked) requestAnimationFrame(() => setPulse(true));
@@ -136,6 +148,7 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
     if (preview) return;
     const nowSaved = !saved;
     setSaved(nowSaved);
+    if (nowSaved) buzz(8);
     try {
       const res = await fetch("/api/posts/save", {
         method: "POST",
@@ -314,9 +327,9 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
             {post.scheduled ? (
               "Scheduled"
             ) : linkable ? (
-              <Link href={postHref} className="post-time">{post.timeAgo}</Link>
+              <Link href={postHref} className="post-time" title={exactTime} suppressHydrationWarning>{post.timeAgo}</Link>
             ) : (
-              post.timeAgo
+              <span title={exactTime} suppressHydrationWarning>{post.timeAgo}</span>
             )}
             {s.visibility === "private" && <> &middot; {isEvent ? "Private event" : "Only you"}</>}
             {s.pinned && <> &middot; Pinned</>}
@@ -450,8 +463,15 @@ export default function PostCard({ post, preview = false, detail = false, trk = 
         </div>
       )}
 
+      {spoilerOn && !covered && spoilerMode !== "show" && (
+        <button type="button" className="spoiler-recover" onClick={() => setCovered(true)}>
+          <EyeOffIcon />
+          Cover spoiler again
+        </button>
+      )}
+
       <div className="post-stats">
-        <span className="like-count">
+        <span key={tick} className={`like-count${tick ? " tick" : ""}`}>
           {s.hideLikes && !post.isOwner ? "Likes hidden" : `${displayedLikes} likes`}
           {s.hideLikes && post.isOwner && <em className="hint-inline"> (hidden from others)</em>}
         </span>

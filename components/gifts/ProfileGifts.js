@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getGame, giftFxProps, giftMessage, giftsHref } from "@/lib/gifts";
+import { getGame, getGift, giftMessage, giftsHref, rarityColor } from "@/lib/gifts";
+import GiftGlyph from "./GiftGlyph";
 import { formatCount } from "@/lib/format-count";
 
 // "Gifts received" strip on a profile: the newest gifts and who sent them, plus
@@ -22,12 +23,12 @@ export default function ProfileGifts({ username, gifts, total, isOwner }) {
       {gifts.length > 0 ? (
         <ul className="pf-gifts-row">
           {gifts.map((g) => {
-            const fx = giftFxProps(g.giftId);
+            const rarity = getGift(g.giftId)?.rarity || "common";
             const msg = giftMessage(g.giftId, g.note, g.id);
             return (
-              <li key={g.id} className="pf-gift" style={{ "--g": getGame(g.game).color }} title={msg.text}>
+              <li key={g.id} className={`pf-gift pf-gift-${rarity}`} style={{ "--g": getGame(g.game).color, "--r": rarityColor(rarity) }} title={msg.text}>
                 <span className="pf-gift-emoji" aria-hidden="true">
-                  <span className={fx.className} style={fx.style}>{g.emoji}</span>
+                  <GiftGlyph giftId={g.giftId} emoji={g.emoji} />
                 </span>
                 <span className="pf-gift-name">{g.name}</span>
                 <span className="pf-gift-from">

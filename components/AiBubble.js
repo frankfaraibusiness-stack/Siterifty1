@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { setAiBubble } from "@/lib/look";
+import Toast, { useToast } from "./Toast";
 
 // The chat itself only loads the first time someone opens it, so the bubble
 // costs nothing on pages where nobody taps it.
@@ -25,13 +26,12 @@ export default function AiBubble({ signedIn = false }) {
   const root = useRef(null);
   const xBtn = useRef(null);
   const firstChoice = useRef(null);
-  const toastTimer = useRef(null);
   const openBtn = useRef(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [sessionHidden, setSessionHidden] = useState(false);
   const [asking, setAsking] = useState(false);
-  const [toast, setToast] = useState("");
+  const { toast, show, hide } = useToast();
 
   // Only draw after mount, once we know whether this tab already hid it.
   useEffect(() => {
@@ -41,14 +41,9 @@ export default function AiBubble({ signedIn = false }) {
       // storage blocked: just show it
     }
     setMounted(true);
-    return () => clearTimeout(toastTimer.current);
   }, []);
 
-  const say = useCallback((text) => {
-    clearTimeout(toastTimer.current);
-    setToast(text);
-    toastTimer.current = setTimeout(() => setToast(""), 4500);
-  }, []);
+  const say = useCallback((text) => show(text, "info"), [show]);
 
   const closeChat = useCallback(() => {
     setChatOpen(false);
@@ -136,11 +131,7 @@ export default function AiBubble({ signedIn = false }) {
     };
   }, [mounted, sessionHidden]);
 
-  const toastEl = toast ? (
-    <div className="pf-toast ai-toast" role="status">
-      {toast}
-    </div>
-  ) : null;
+  const toastEl = <Toast toast={toast} onClose={hide} />;
 
   if (!mounted || sessionHidden) return toastEl;
 

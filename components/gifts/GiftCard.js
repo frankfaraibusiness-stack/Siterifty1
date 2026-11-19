@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { RARITIES, formatPrice, getGame, giftFxProps, giftHref } from "@/lib/gifts";
+import { RARITIES, formatPrice, getGame, giftHref, rarityColor } from "@/lib/gifts";
+import GiftGlyph from "./GiftGlyph";
 
-// The gift picture: a big emoji on a glowing tile in the colour of its game.
+// The gift picture (artwork, or its emoji) on a tile framed by its rarity and tinted by its game.
 // Plain markup (no hooks) so it works in server and client components.
 export function GiftTile({ gift, large = false }) {
   const game = getGame(gift.game);
   const rarity = RARITIES.find((r) => r.id === gift.rarity) || RARITIES[0];
-  const fx = giftFxProps(gift);
+  const top = rarity.id === "legendary" || rarity.id === "mythic";
   return (
     <span
       className={`gf-tile gf-r-${rarity.id}${large ? " gf-tile-lg" : ""}`}
@@ -14,9 +15,17 @@ export function GiftTile({ gift, large = false }) {
       aria-hidden="true"
     >
       <span className="gf-tile-grid" />
-      {(rarity.id === "legendary" || rarity.id === "mythic") && <span className="gf-aura" />}
+      {top && <span className="gf-aura" />}
+      <span className="gf-floor" />
+      {top && (
+        <>
+          <span className="gf-spark gf-spark-a" />
+          <span className="gf-spark gf-spark-b" />
+          <span className="gf-spark gf-spark-c" />
+        </>
+      )}
       <span className="gf-emoji">
-        <span className={fx.className} style={fx.style}>{gift.emoji}</span>
+        <GiftGlyph giftId={gift.id} emoji={gift.emoji} />
       </span>
     </span>
   );
@@ -25,7 +34,7 @@ export function GiftTile({ gift, large = false }) {
 export function RarityTag({ gift }) {
   const rarity = RARITIES.find((r) => r.id === gift.rarity) || RARITIES[0];
   return (
-    <span className="gf-rarity" style={{ "--r": rarity.color }}>
+    <span className={`gf-rarity gf-rarity-${rarity.id}`} style={{ "--r": rarity.color }}>
       {rarity.name}
     </span>
   );
@@ -38,8 +47,8 @@ export default function GiftCard({ gift, ctx }) {
   return (
     <Link
       href={giftHref(gift.id, ctx)}
-      className="gf-card"
-      style={{ "--g": game.color }}
+      className={`gf-card gf-card-${gift.rarity}`}
+      style={{ "--g": game.color, "--r": rarityColor(gift.rarity) }}
       prefetch={false}
     >
       <GiftTile gift={gift} />

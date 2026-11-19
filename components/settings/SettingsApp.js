@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import PlanBadges from "../PlanBadges";
+import Discover from "../Discover";
 import Skyline from "./Skyline";
 import { SettingsContext } from "./context";
 import CharacterPanel from "./CharacterPanel";
@@ -9,23 +11,38 @@ import StashPanel from "./StashPanel";
 import WantedPanel from "./WantedPanel";
 import LeakPanel from "./LeakPanel";
 import LookPanel from "./LookPanel";
+import ReelsPanel from "./ReelsPanel";
+import AccessPanel from "./AccessPanel";
+import MembershipPanel from "./MembershipPanel";
+import StoriesPanel from "./StoriesPanel";
+import RegionPanel from "./RegionPanel";
 import {
+  AccessIcon,
   BackIcon,
   CharacterIcon,
   ChevronIcon,
+  GlobeIcon,
   LeakIcon,
   LockIcon,
   LogoutIcon,
   LookIcon,
+  MembershipIcon,
+  ReelIcon,
   StashIcon,
+  StoriesIcon,
   WantedIcon,
 } from "./icons";
 import { getTheme } from "@/lib/profile-themes";
 import { exposureStars } from "@/lib/settings";
+import { accessSummary, applyAccess } from "@/lib/access";
+import { getPlan } from "@/lib/plans";
+import { audienceLabel } from "@/lib/story-schema";
+import { readCurrencyChoice, rememberCurrency } from "@/lib/currency";
 import { PRESETS, applyLook, hasLookCookie, isAiBubbleHidden, setAiBubble } from "@/lib/look";
+import Toast, { useToast } from "../Toast";
 
-// The five panels. `id` is the URL hash (/settings#look). `summary` is the live
-// status chip shown on the panel's row.
+// The ten panels. `id` is the URL hash (/settings#look). `summary(prefs, me)` is
+// the live status chip shown on the panel's row.
 const PANELS = [
   {
     id: "character",
@@ -70,6 +87,24 @@ const PANELS = [
     },
   },
   {
+    id: "stories",
+    title: "Stories",
+    blurb: "Stories: who can watch and whether people reply",
+    Icon: StoriesIcon,
+    Panel: StoriesPanel,
+    tile: ["--accent-pink", "--accent-lime"],
+    summary: (p) => `${audienceLabel(p.stories.audience)}${p.stories.replies ? "" : ", no replies"}`,
+  },
+  {
+    id: "reels",
+    title: "Vice Reel",
+    blurb: "Videos: sound, which reel opens and data use",
+    Icon: ReelIcon,
+    Panel: ReelsPanel,
+    tile: ["--accent-lime", "--accent-cyan"],
+    summary: (p) => `${p.reels.sound ? "Sound on" : "Starts muted"}${p.reels.dataSaver ? ", data saver" : ""}`,
+  },
+  {
     id: "look",
     title: "City Look",
     blurb: "Appearance: colours across the whole city",
@@ -81,26 +116,49 @@ const PANELS = [
         ? "Custom colours"
         : PRESETS.find((x) => x.id === p.look.preset)?.name || "Vice City Neon",
   },
+  {
+    id: "region",
+    title: "Region",
+    blurb: "Currency: how prices are shown to you",
+    Icon: GlobeIcon,
+    Panel: RegionPanel,
+    tile: ["--accent-lime", "--accent-pink"],
+    summary: (p) => (p.region.currency === "auto" ? "Automatic" : p.region.currency),
+  },
+  {
+    id: "access",
+    title: "Access",
+    blurb: "Accessibility: contrast, links and bigger buttons",
+    Icon: AccessIcon,
+    Panel: AccessPanel,
+    tile: ["--accent-cyan", "--accent-lime"],
+    summary: (p) => accessSummary(p.access),
+  },
+  {
+    id: "membership",
+    title: "Membership",
+    blurb: "Plan and perks: what you have and what’s next",
+    Icon: MembershipIcon,
+    Panel: MembershipPanel,
+    tile: ["--accent-pink", "--accent-cyan"],
+    summary: (p, me) => getPlan(me.plan).short,
+  },
 ];
 const IDS = PANELS.map((p) => p.id);
 
 export default function SettingsApp({ me: initialMe, prefs: initialPrefs, stats: initialStats, email }) {
   const [me, setMe] = useState(initialMe);
   const [prefs, setPrefs] = useState(initialPrefs);
-  const [toast, setToast] = useState(null);
+  const { toast, show: showToast, hide: hideToast } = useToast();
   const [active, setActive] = useState(null); // null = the panel list (phones)
   const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
 
   const confirmed = useRef(initialPrefs); // what the server last confirmed
   const pending = useRef({});
   const timers = useRef({});
-  const toastTimer = useRef(null);
 
-  const notify = useCallback((text, bad = false) => {
-    clearTimeout(toastTimer.current);
-    setToast({ text, bad });
-    toastTimer.current = setTimeout(() => setToast(null), bad ? 4200 : 1800);
-  }, []);
+  const notify = useCallback((text, bad = false) => showToast(text, bad ? "error" : "success"), [showToast]);
 
   const flush = useCallback(
     async (section) => {
@@ -124,10 +182,15 @@ export default function SettingsApp({ me: initialMe, prefs: initialPrefs, stats:
           applyLook(confirmed.current.look);
           setAiBubble(confirmed.current.look.aiBubble);
         }
+        if (section === "access") applyAccess(confirmed.current.access);
+        if (section === "region") {
+          rememberCurrency(confirmed.current.region.currency);
+          router.refresh();
+        }
         notify(err.message || "Couldn’t save that. Check your connection.", true);
       }
     },
-    [notify]
+    [notify, router]
   );
 
   // update("content", { comments: false }): shows the change right away and
@@ -164,6 +227,20 @@ export default function SettingsApp({ me: initialMe, prefs: initialPrefs, stats:
   useEffect(() => {
     if (!hasLookCookie()) applyLook(initialPrefs.look);
   }, [initialPrefs.look]);
+
+  // The account's accessibility choices win over whatever this device had saved.
+  useEffect(() => {
+    applyAccess(initialPrefs.access);
+  }, [initialPrefs.access]);
+
+  // The account's currency wins over this device's: if they differ, switch and redraw the prices.
+  useEffect(() => {
+    const want = initialPrefs.region.currency;
+    if (readCurrencyChoice() !== want) {
+      rememberCurrency(want);
+      router.refresh();
+    }
+  }, [initialPrefs.region.currency, router]);
 
   // "Never show the AI bubble" is sticky: if this device or the account says
   // hide, both end up on hide. (Turning it back on is done in City Look.)
@@ -222,6 +299,9 @@ export default function SettingsApp({ me: initialMe, prefs: initialPrefs, stats:
   );
 
   const shown = PANELS.find((p) => p.id === (active || "character"));
+  // The Perks row says how many you already own; everything else keeps its default line.
+  const ownedPerks = (me.perks || []).length;
+  const shopNotes = ownedPerks > 0 ? { perks: `You own ${ownedPerks}. Pay once, keep forever` } : undefined;
   const theme = getTheme(me.theme);
   const initial = (me.displayName || me.username).trim().charAt(0).toUpperCase();
 
@@ -276,13 +356,16 @@ export default function SettingsApp({ me: initialMe, prefs: initialPrefs, stats:
                     <b>{p.title}</b>
                     <small>{p.blurb}</small>
                   </span>
-                  <span className="st-chip">{p.summary(prefs)}</span>
+                  <span className="st-chip">{p.summary(prefs, me)}</span>
                   <span className="st-chev">
                     <ChevronIcon />
                   </span>
                 </button>
               ))}
             </nav>
+
+            {/* Shops and extras: the places that used to be reachable only from the side menu. */}
+            <Discover spot="settings" variant="rows" title="Shops and extras" notes={shopNotes} />
 
             <div className="st-side-foot">
               <button type="button" className="st-btn ghost wide" onClick={logout} disabled={loggingOut}>
@@ -310,11 +393,7 @@ export default function SettingsApp({ me: initialMe, prefs: initialPrefs, stats:
           </section>
         </div>
 
-        {toast && (
-          <div className={`st-toast${toast.bad ? " bad" : ""}`} role="status" aria-live="polite">
-            {toast.text}
-          </div>
-        )}
+        <Toast toast={toast} onClose={hideToast} />
       </main>
     </SettingsContext.Provider>
   );

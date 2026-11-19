@@ -102,3 +102,32 @@ export const LogoutIcon = () => (
     <path d="M9.5 4.5H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 19.5h3.5M15 8l4 4-4 4M19 12H9.5" />
   </svg>
 );
+
+export const ReelIcon = () => (
+  <svg {...base}>
+    <rect x="6" y="2.8" width="12" height="18.4" rx="3" />
+    <path d="M10.4 9.2v5.6l4.6-2.8z" />
+  </svg>
+);
+
+export const AccessIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="8.6" />
+    <circle cx="12" cy="7.8" r="1.2" />
+    <path d="M7.6 10.6c1.4.5 2.8.7 4.4.7s3-.2 4.4-.7M12 11.4v3.2M9.6 18l2.4-3.4 2.4 3.4" />
+  </svg>
+);
+
+export const MembershipIcon = () => (
+  <svg {...base}>
+    <path d="M3.2 8l4.6 3.9L12 4.8l4.2 7.1L20.8 8l-1.9 10.2H5.1z" />
+    <path d="M5.6 21h12.8" />
+  </svg>
+);
+
+export const StoriesIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="8.6" strokeDasharray="3.2 2.4" />
+    <circle cx="12" cy="12" r="4.4" />
+  </svg>
+);

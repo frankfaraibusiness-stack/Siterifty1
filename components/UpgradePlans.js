@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthModal from "./AuthModal";
 import PlanBadges from "./PlanBadges";
@@ -8,6 +8,7 @@ import MemberLogoBadge from "./MemberLogoBadge";
 import Money from "./Money";
 import PriceNote from "./PriceNote";
 import { FREE_WHILE_TESTING, MEMBER_LOGO, PLANS, hasMemberLogo } from "@/lib/plans";
+import Toast, { useToast } from "./Toast";
 
 // One distinct mark per plan so the cards read differently at a glance.
 function TierMark({ id }) {
@@ -74,14 +75,8 @@ export default function UpgradePlans({ user, currentPlan }) {
   const router = useRouter();
   const [current, setCurrent] = useState(currentPlan);
   const [busy, setBusy] = useState("");
-  const [toast, setToast] = useState("");
+  const { toast, show, hide } = useToast();
   const [authOpen, setAuthOpen] = useState(false);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(""), 2600);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const currentTier = PLANS.findIndex((p) => p.id === current);
 
@@ -101,10 +96,10 @@ export default function UpgradePlans({ user, currentPlan }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Couldn’t change your plan.");
       setCurrent(data.plan);
-      setToast(`You’re now a ${plan.name}.`);
+      show(`You’re now a ${plan.name}.`, "success");
       router.refresh();
     } catch (err) {
-      setToast(err.message || "Couldn’t change your plan.");
+      show(err.message || "Couldn’t change your plan.", "error");
     } finally {
       setBusy("");
     }
@@ -204,11 +199,7 @@ export default function UpgradePlans({ user, currentPlan }) {
       </section>
       <PriceNote />
 
-      {toast && (
-        <div className="pf-toast" role="status">
-          {toast}
-        </div>
-      )}
+      <Toast toast={toast} onClose={hide} />
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
     </>
   );

@@ -13,6 +13,13 @@ const SPOILER_HINTS = {
   hide: "Posts marked as spoilers never appear in your feed, search or community pages.",
 };
 
+const ORDER_HINTS = {
+  foryou:
+    "“For you” mixes what matches your interests with what’s popular and what’s new, and shuffles a little every time you open the feed. The Following tab stays newest first.",
+  newest: "Plain newest first, the same for everyone.",
+  hot: "“Hot” lifts the posts with the most likes and comments within the latest batch.",
+};
+
 // Feed control: how spoilers behave, which words get muted, and what the home
 // feed shows.
 export default function LeakPanel() {
@@ -47,8 +54,9 @@ export default function LeakPanel() {
             value={f.order}
             onChange={(order) => update("feed", { order })}
             options={[
-              { value: "newest", label: "Newest first" },
-              { value: "hot", label: "Hot first" },
+              { value: "foryou", label: "For you" },
+              { value: "newest", label: "Newest" },
+              { value: "hot", label: "Hot" },
             ]}
           />
           <Segmented
@@ -62,7 +70,7 @@ export default function LeakPanel() {
             ]}
           />
         </div>
-        <p className="st-hint">“Hot first” lifts the posts with the most likes and comments within the latest batch.</p>
+        <p className="st-hint">{ORDER_HINTS[f.order]}</p>
       </Block>
     </>
   );

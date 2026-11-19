@@ -20,6 +20,11 @@ export default function SpoilerText({ spoiler, topic = "", mine = false, childre
     return (
       <>
         <span className="cm-spoil-tag">{tag}</span>
+        {!mine && mode !== "show" && (
+          <button type="button" className="cm-spoil-hide" onClick={() => setOpen(false)}>
+            Hide
+          </button>
+        )}
         {children}
       </>
     );

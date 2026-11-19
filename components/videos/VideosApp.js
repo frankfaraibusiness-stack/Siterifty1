@@ -13,10 +13,11 @@ import { ArrowLeftIcon, VolumeIcon, VolumeOffIcon } from "../icons";
 import { tzMinutes, useReelProgress } from "./useReelProgress";
 import { comboMultiplier } from "@/lib/videos-config";
 import { videoAdGap } from "@/lib/ads";
+import { REEL_SOUND_KEY, preloadReach, startingMode } from "@/lib/reels-prefs";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
-const SOUND_KEY = "gta6fb:vr-sound";
 const MODES = [
+  { id: "foryou", label: "For you" },
   { id: "hot", label: "Hot" },
   { id: "new", label: "New" },
   { id: "following", label: "Following" },
@@ -40,13 +41,13 @@ function useWide() {
 
 // `startId`: a clip opened from elsewhere (/videos?v=ID). It plays first, and a Back button
 // takes the person to where they came from.
-export default function VideosApp({ signedIn, startId = "", canDownload = false }) {
+export default function VideosApp({ signedIn, startId = "", canDownload = false, reels }) {
   const router = useRouter();
   const startRef = useRef(startId);
   const prog = useReelProgress({ signedIn });
   const wide = useWide();
 
-  const [mode, setMode] = useState("hot");
+  const [mode, setMode] = useState(() => startingMode(reels, startId));
   const [items, setItems] = useState([]);
   const [next, setNext] = useState(null);
   const [state, setState] = useState("loading"); // loading | ready | error | empty
@@ -67,6 +68,7 @@ export default function VideosApp({ signedIn, startId = "", canDownload = false 
   const scroller = useRef(null);
   const freeze = useRef(false); // true while the screen is resizing for full screen, so the active clip can't jump
   const settleTimers = useRef([]);
+  const reach = preloadReach(reels); // data saver: only the clip being watched gets a <video>
   const itemsRef = useRef(items);
   const feedRef = useRef([]);
   const adAsked = useRef(new Set()); // ad slots already requested (or passed) this load
@@ -112,17 +114,20 @@ export default function VideosApp({ signedIn, startId = "", canDownload = false 
   useEffect(() => () => clearTimeout(noteTimer.current), []);
 
   // Remember the sound choice (storage can be blocked, so every touch is guarded).
+  // This device's own choice wins; with none yet, the account's "Start clips with sound" decides.
+  const startWithSound = !!reels?.sound;
   useEffect(() => {
     try {
-      if (localStorage.getItem(SOUND_KEY) === "on") setMuted(false);
+      const saved = localStorage.getItem(REEL_SOUND_KEY);
+      if (saved === "on" || (saved === null && startWithSound)) setMuted(false);
     } catch {
-      // Sound just starts muted.
+      if (startWithSound) setMuted(false);
     }
-  }, []);
+  }, [startWithSound]);
   const toggleMute = useCallback(() => {
     setMuted((m) => {
       try {
-        localStorage.setItem(SOUND_KEY, m ? "on" : "off");
+        localStorage.setItem(REEL_SOUND_KEY, m ? "on" : "off");
       } catch {
         // Not remembered.
       }
@@ -165,7 +170,7 @@ export default function VideosApp({ signedIn, startId = "", canDownload = false 
       setAdSeed(1 + Math.floor(Math.random() * 2_000_000_000));
       scroller.current?.scrollTo({ top: 0, behavior: "auto" });
       try {
-        const d = await fetchPage(m, "", m === "hot" ? startRef.current : "");
+        const d = await fetchPage(m, "", m === "hot" || m === "foryou" ? startRef.current : "");
         if (id !== loadId.current) return;
         setItems(d.items);
         setNext(d.next);
@@ -514,7 +519,7 @@ export default function VideosApp({ signedIn, startId = "", canDownload = false 
                 ad={entry.ad}
                 index={i}
                 active={i === active}
-                near={Math.abs(i - active) <= 1}
+                near={Math.abs(i - active) <= reach}
                 muted={muted}
                 hold={hold}
                 onMute={toggleMute}
@@ -589,7 +594,7 @@ export default function VideosApp({ signedIn, startId = "", canDownload = false 
                       : "Be the first. Upload a video and it shows up here."}
                 </p>
                 {mode === "following" ? (
-                  <button type="button" onClick={() => setMode("hot")}>See what’s Hot</button>
+                  <button type="button" onClick={() => setMode("foryou")}>See what’s For you</button>
                 ) : (
                   <Link href="/create">Post a clip</Link>
                 )}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AuthModal from "../AuthModal";
-import { formatMills } from "@/lib/gifts";
+import { INFINITE_WALLET, formatMills } from "@/lib/gifts";
 
 function WalletIcon() {
   return (
@@ -33,7 +33,7 @@ export default function WalletCard({ mills = 0, signedIn = false }) {
         </p>
         <p className="gf-wallet-sub">Money you spend on gifts. No card needed.</p>
         {signedIn ? (
-          <span className="gf-wallet-chip">Top-ups coming soon</span>
+          <span className="gf-wallet-chip">{INFINITE_WALLET ? "Test mode: unlimited wallet" : "Top-ups coming soon"}</span>
         ) : (
           <button type="button" className="gf-wallet-login" onClick={() => setAuthOpen(true)}>
             Log in to see your balance

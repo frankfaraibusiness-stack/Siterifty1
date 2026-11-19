@@ -9,7 +9,7 @@ import StoryViewer from "./StoryViewer";
 // Landing-page stories: a dashed "Your Story" card next to a compact "Stories"
 // card that lists the people who have a story up. Tapping a person (or "See All")
 // opens the existing story viewer. A full stories page can come later.
-export default function StoriesRail({ stories, user }) {
+export default function StoriesRail({ stories, user, defaults }) {
   const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -86,6 +86,7 @@ export default function StoriesRail({ stories, user }) {
 
       {composerOpen && (
         <StoryComposer
+          defaults={defaults}
           onClose={() => setComposerOpen(false)}
           onPosted={() => {
             setComposerOpen(false);

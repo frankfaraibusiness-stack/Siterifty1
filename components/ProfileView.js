@@ -10,11 +10,13 @@ import { ABOUT_TAB, cleanTab } from "./profile/tabs";
 import MessageButton from "./messages/MessageButton";
 import { FriendRequests, SocialButtons, SocialCounts, useSocial } from "./SocialActions";
 import PlanBadges from "./PlanBadges";
+import Discover from "./Discover";
 import { FlairBadge, FlairName, haloClass } from "./Flair";
 import { BoltIcon, CameraIcon, ChevronDownIcon, EditIcon, ShareIcon } from "./icons";
 import { GearIcon, LogoutIcon } from "./settings/icons";
 import { getTheme } from "@/lib/profile-themes";
 import { giftsHref } from "@/lib/gifts";
+import Toast, { useToast } from "./Toast";
 
 // The whole profile: the header (banner, name, actions, a one-line bio) and the
 // tabs under it. They share one component so the bio can open the About tab and
@@ -37,7 +39,7 @@ export default function ProfileView({
   const [profile, setProfile] = useState({ ...initialProfile });
   const [tab, setTab] = useState(() => cleanTab(initialTab));
   const [editing, setEditing] = useState(false);
-  const [toast, setToast] = useState("");
+  const { toast, show: flash, hide: hideToast } = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -75,11 +77,6 @@ export default function ProfileView({
   const theme = getTheme(profile.theme);
   const vars = { "--a": theme.a, "--b": theme.b };
   const initial = (profile.displayName || profile.username).trim().charAt(0).toUpperCase();
-
-  function flash(message) {
-    setToast(message);
-    setTimeout(() => setToast(""), 2200);
-  }
 
   async function share() {
     const url = `${window.location.origin}/u/${profile.username}`;
@@ -222,6 +219,14 @@ export default function ProfileView({
                       <span className="pf-ico"><BoltIcon /></span>
                       {profile.plan === "kingpin" ? "Your plan" : "Upgrade"}
                     </Link>
+                    <Link href="/saved" role="menuitem" className="pf-menu-item">
+                      <span className="pf-ico">
+                        <svg viewBox="0 0 24 24">
+                          <path d="M6.5 4h11a1 1 0 0 1 1 1v15l-6.5-4-6.5 4V5a1 1 0 0 1 1-1z" />
+                        </svg>
+                      </span>
+                      Saved posts
+                    </Link>
                     <Link href="/settings" role="menuitem" className="pf-menu-item">
                       <span className="pf-ico"><GearIcon /></span>
                       Settings
@@ -256,6 +261,18 @@ export default function ProfileView({
 
       {giftsStrip}
 
+      {/* Your own profile gets one tidy card of shortcuts (one block, not loose promos). */}
+      {isOwner && !locked && (
+        <Discover
+          spot="profile"
+          variant="tiles"
+          card
+          className="dc-profile"
+          title="Your corner"
+          sub="Shops and extras for your account"
+        />
+      )}
+
       {locked ? (
         <section className="pf-locked">
           <h2>This account is private</h2>
@@ -280,7 +297,7 @@ export default function ProfileView({
 
       {authOpen && <AuthModal initialView="login" onClose={() => setAuthOpen(false)} />}
 
-      {toast && <div className="pf-toast">{toast}</div>}
+      <Toast toast={toast} onClose={hideToast} />
     </>
   );
 }
