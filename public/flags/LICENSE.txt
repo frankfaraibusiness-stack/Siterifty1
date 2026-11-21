@@ -1,0 +1,6 @@
+Country flag pictures in this folder (one PNG per ISO 3166-1 alpha-2 code, lower case, e.g. za.png)
+
+Source: the flag artwork of Noto Color Emoji by Google (https://github.com/googlefonts/noto-emoji).
+The font is licensed under the SIL Open Font License 1.1 (https://openfontlicense.org); the flag artwork
+in it is based on the public-domain region-flags set. The pictures were cropped to the flag, scaled to
+64x48 pixels and reduced to a 256-colour palette. Nothing else was changed.
