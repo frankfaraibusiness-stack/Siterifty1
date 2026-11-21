@@ -1,0 +1,49 @@
+/* Creator earnings: /earnings and the owner's strip on a video's page. Theme variables only. */
+.ern-page { max-width: 760px; margin: 0 auto; padding: 18px 16px 90px; display: grid; gap: 16px; }
+.ern-head h1 { font-size: 26px; font-weight: 900; letter-spacing: -.01em; }
+.ern-head p { margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--text-dim); }
+
+.ern-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.ern-card { padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); display: grid; gap: 4px; align-content: start; }
+.ern-card small { font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.ern-card b { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.ern-card.main { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-lime, #b6ff3d) 16%, var(--surface)), var(--surface)); border-color: color-mix(in srgb, var(--accent-lime, #b6ff3d) 40%, var(--border)); }
+.ern-card.main b { font-size: 22px; }
+@media (max-width: 520px) { .ern-cards { grid-template-columns: 1fr 1fr; } .ern-card.main { grid-column: 1 / -1; } }
+
+.ern-panel { padding: 16px; border-radius: 22px; background: var(--surface); border: 1px solid var(--border); display: grid; gap: 12px; }
+.ern-panel h2 { font-size: 15px; font-weight: 800; }
+
+.ern-bars { list-style: none; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 96px; margin: 0; padding: 0; }
+.ern-bars li { display: grid; grid-template-rows: 1fr auto; gap: 6px; height: 100%; justify-items: center; align-items: end; min-width: 0; }
+.ern-bars i { display: block; width: 100%; max-width: 34px; border-radius: 8px 8px 4px 4px; background: color-mix(in srgb, var(--text-dim) 28%, transparent); }
+.ern-bars i.on { background: linear-gradient(180deg, var(--accent-lime, #b6ff3d), var(--accent-cyan, #2de2c5)); }
+.ern-bars span { font-size: 11px; font-weight: 700; color: var(--text-dim); }
+
+.ern-rates { list-style: none; display: grid; gap: 8px; margin: 0; padding: 0; }
+.ern-rates li { display: flex; align-items: baseline; gap: 10px; font-size: 13.5px; }
+.ern-rates b { flex: none; min-width: 92px; font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.ern-rates span { color: var(--text-dim); line-height: 1.4; }
+.ern-note { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
+
+.ern-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.ern-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+.ern-list li:first-child { border-top: 0; padding-top: 0; }
+.ern-list a { display: grid; gap: 2px; min-width: 0; color: inherit; text-decoration: none; }
+.ern-vt { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ern-list small { font-size: 12px; color: var(--text-dim); }
+.ern-list b { flex: none; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.ern-empty { font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
+
+/* the strip under a monetized video, for its author only */
+.ern-strip { margin: 12px 0 0; padding: 14px 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); display: grid; gap: 10px; }
+.ern-strip-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ern-tag { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #0d0b10; background: linear-gradient(135deg, var(--accent-lime, #b6ff3d), var(--accent-cyan, #2de2c5)); }
+.ern-link { font-size: 12.5px; font-weight: 700; color: var(--accent-cyan, #2de2c5); text-decoration: none; }
+.ern-strip-body { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ern-strip-body > div:first-child { display: grid; gap: 2px; min-width: 0; }
+.ern-big { font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.ern-strip small { font-size: 12px; color: var(--text-dim); }
+.ern-strip .ern-bars { width: 150px; height: 64px; gap: 5px; flex: none; }
+.ern-strip .ern-bars span { display: none; }
+@media (max-width: 420px) { .ern-strip .ern-bars { width: 110px; } }
