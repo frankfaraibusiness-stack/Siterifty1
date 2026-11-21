@@ -206,19 +206,22 @@ If Storage isn't ready yet, the upload fails with a clear message and YouTube li
 
 ## Plans and the Upgrade page (`/upgrade`)
 
-Four plans, defined in one file: `lib/plans.js`. Prices are typed once, in US dollars, and shown to each visitor in their own currency (see **Prices in local currency** below).
+Five plans, defined in one file: `lib/plans.js`. Prices are typed once, in US dollars, and shown to each visitor in their own currency (see **Prices in local currency** below).
 
 | Plan | Price (USD) |
 |---|---|
 | Boardwalk Drifter (free) | $0.00 |
 | Getaway Wheelman | $4.99/mo |
 | Heist Mastermind | $9.99/mo |
-| Vice Kingpin (everything) | $19.99/mo |
+| Vice Kingpin (highest limits) | $19.99/mo |
+| Creator Plus (everything combined, for creators) | $29.00/mo |
 
 - **Where the button is:** the owner's profile (`/u/<you>`) has an **Upgrade** button next to Edit profile, Share and Log out. It opens `/upgrade`.
 - **Page contents:** themed plan cards, a "How pricing works" section, a side-by-side limits table and a Q&A. Cards, table and FAQ all read from `lib/plans.js`, so edit the names, prices, limits and answers there.
 - **Free while testing:** `FREE_WHILE_TESTING` in `lib/plans.js` is `true`, so switching to any plan costs nothing. When you add real billing, set it to `false` — `POST /api/plan` then refuses paid plans (402) until you add the payment step there.
 - **New accounts:** signup (email and Google) writes `plan: "drifter"` on `users/{uid}`. Older accounts with no `plan` field read as Drifter via `lib/user-plan.js`.
+- **Creator Plus** ($29/mo, id `creatorplus`, the top rung of the ladder) matches Kingpin on every limit and adds the Creator badge plus two perks marked **Soon**: monetizing content and the creator analytics dashboard panel. Those two are listed on the card and in the table but not built yet; drop `soon: true` on them in `lib/plans.js` once they ship. It also unlocks everything gated by rank (paid events, video download, member comment pins) automatically.
+- **Video formats:** posting a video first shows two cards, **Shorts** (10 seconds to 1 minute, every plan, can't be monetized) and **Long form** (3 to 10 minutes, Creator Plus only, monetization on or off). The rules live in `VIDEO_FORMS` (`lib/post-schema.js`) and `LONG_FORM_PLAN` / `canUploadLongForm` (`lib/plans.js`), and `POST /api/posts/create` re-checks the plan and the clip length on the server. The post stores `media.form` (`short` or `long`) and `media.monetized`; the monetization switch records the choice on the post. Ads and earnings are described in **Ads on monetized videos** below; payouts are still to come.
 - **Limits are display only.** Nothing enforces them yet. When you add enforcement, read the user's plan with `getUserPlan(uid)` and compare against the numbers in `LIMIT_GROUPS`.
 
 | Route | What it does |
@@ -229,8 +232,8 @@ Four plans, defined in one file: `lib/plans.js`. Prices are typed once, in US do
 ## Dynamic profile pictures and plan badges
 
 - **Profile pictures on posts are live.** Posts no longer rely on what was saved when they were created. Every time posts are shown (feed, `/p/[id]`, profiles, search) the author's current theme colours, profile picture and plan are read from `users/{uid}` (`loadAuthors` in `lib/feed-data.js`). Change your picture and all your old posts update. Posts without a `uid` (very old ones) are matched by username. The `avatarA`/`avatarB` saved on a post are now only a fallback.
-- **Plan badges** (`components/PlanBadges.js`, defined per plan in `lib/plans.js`): free has none; Getaway Wheelman has 1 (verified); Heist Mastermind has 2 (verified, target); Vice Kingpin has 3 (gold verified, crown, diamond). Each uses its plan's colour. They show next to names on posts, comments, search results, profiles and the plan cards.
-- **Member comments are pinned for a limited time** so every plan has value and free users can rank too: Wheelman 24 hours, Mastermind 3 days, Kingpin 7 days (`PIN_HOURS` in `lib/plans.js`). The deadline is saved on the comment when it's posted (`pinnedUntil`, `pinPlan` on `posts/{id}/comments/{id}`), so changing plan later never changes old comments. There is no cron job: pins are checked when comments load, and the open comments sheet shows a live countdown and drops a comment out of the pinned group the moment its time runs out. Pinned comments are tinted in the plan colour with a countdown chip, sorted above the rest (higher plan first, then Newest or Top). After expiry the comment ranks normally and keeps the member's badges. Comments posted before this feature have no pin. The browser clock is lined up with the server's, so a wrong device clock can't change a pin's length.
+- **Plan badges** (`components/PlanBadges.js`, defined per plan in `lib/plans.js`): free has none; Getaway Wheelman has 1 (verified); Heist Mastermind has 2 (verified, target); Vice Kingpin has 3 (gold verified, crown, diamond); Creator Plus has 4 (the same three plus the Creator coin). Each uses its plan's colour. They show next to names on posts, comments, search results, profiles and the plan cards.
+- **Member comments are pinned for a limited time** so every plan has value and free users can rank too: Wheelman 24 hours, Mastermind 3 days, Kingpin and Creator Plus 7 days (`PIN_HOURS` in `lib/plans.js`). The deadline is saved on the comment when it's posted (`pinnedUntil`, `pinPlan` on `posts/{id}/comments/{id}`), so changing plan later never changes old comments. There is no cron job: pins are checked when comments load, and the open comments sheet shows a live countdown and drops a comment out of the pinned group the moment its time runs out. Pinned comments are tinted in the plan colour with a countdown chip, sorted above the rest (higher plan first, then Newest or Top). After expiry the comment ranks normally and keeps the member's badges. Comments posted before this feature have no pin. The browser clock is lined up with the server's, so a wrong device clock can't change a pin's length.
 
 ## Settings (`/settings`)
 
@@ -258,7 +261,7 @@ Notes: handles can't be changed and accounts can't be deleted from settings yet.
 
 **Controls (per community):** lock chat (everyone / mods & admins / admins only), links and images (everyone / staff only / nobody), leak policy (allowed / covered behind a tap-to-reveal / banned), slow mode, new-member wait, mods-can-approve, show member list.
 
-Firestore: `communities/{id}` with subcollections `members`, `requests`, `bans`, `assets` (avatar/banner), `posts` (+ `media`); `users/{uid}.communityIds` and `.communityPending` power "your communities" without composite indexes. All writes go through `POST /api/communities` (`action` = create, join, request, approve, set-role, update, post, ...). Images are served by `GET /cmedia/...`. No new env vars or indexes are needed.
+Firestore: `communities/{id}` with subcollections `members`, `requests`, `bans`, `assets` (avatar/banner), `posts` (+ `media`); `users/{uid}.communityIds` and `.communityPending` power "your communities" without composite indexes. All writes go through `POST /api/communities` (`action` = create, join, request, approve, set-role, update, post, ...). Images are served by `GET /cmedia/...`. Every community needs an uploaded icon (`assets/avatar`, required at creation and when editing Look). Who can join lives on the community document itself as `countries` (two-letter codes; empty or missing = worldwide, the default), so cards, listings and the page get it with the read they already do; `join` and `request` check it against the member's account `country`, and existing members are never removed by a later change. No new env vars or indexes are needed.
 
 ## Public info pages (/terms /privacy /cookies /guidelines /copyright /disclaimer /help /contact /about)
 
@@ -283,6 +286,8 @@ Bump `LEGAL.updated` and `LEGAL.updatedISO` whenever you change the legal text. 
 Every price is typed once, in **US dollars** (`price` in `lib/plans.js` and `lib/perks.js`). Visitors see it in their own currency at the live exchange rate.
 
 - **Country to currency:** `lib/fx.js` reads the visitor's country from Vercel's `x-vercel-ip-country` header (Cloudflare's `cf-ipcountry` also works). With no IP header, such as on localhost, it uses the region in the browser language (`en-ZA` means South Africa). `lib/currency.js` maps the country to a currency; anything unlisted shows USD. Euro countries all get EUR.
+- **Member country:** when an account is created (email or Google sign-up), `lib/geo.js` saves `users/{uid}.country` as the two-letter code the host sends (`x-vercel-ip-country`, `cf-ipcountry` or `cloudfront-viewer-country`), or `"unknown"` when there is none (localhost, VPN the host can't place, any error). It never blocks a sign-up. `gender` is saved at the same moment from the character pick. Accounts made before this have no `country` field. The flag is a small picture from `public/flags/<code>.png` (drawn by `components/Flag.js`), not the emoji, so it looks the same everywhere including Windows desktop browsers (which show emoji flags as plain letters); the pictures come from Google's Noto Color Emoji (see `public/flags/LICENSE.txt`). Members can correct both in Settings > Character (country from a searchable list in `lib/countries.js`, gender female or male): they save at once through `PUT /api/settings/identity`, which only ever writes `country` and `gender` on the member's own `users/{uid}`.
+- **Country flag and gender icon privacy:** the flag sits on the corner of the profile picture and the gender icon beside the name. Settings > Account has a picker for each (`prefs.account.countryAudience`, `prefs.account.genderAudience`): Public (default), Friends & followers, Friends only, Followers only, No one. "No one" needs a paid plan (checked in the picker and in `PUT /api/settings`). The rule lives in `lib/profile-privacy.js` and is applied on the server in `lib/profile-data.js`, so a hidden value is never sent to the viewer's browser; a private account shows neither to other people. Accounts that had turned off the old "Show my gender" switch are read as "No one" and stay hidden. "Friends" means an accepted friendship; "followers" means the viewer follows the member.
 - **Live rate:** fetched on the server from `open.er-api.com` (free, no key, updated daily), with `@fawazahmed0/currency-api` on jsDelivr as a backup. Next caches the answer for an hour (`REVALIDATE_SECONDS` in `lib/fx.js`). If both sources are down and there is no earlier answer, everyone sees USD. The free source asks for credit, which is the "Rates by Exchange Rate API" link in the small print.
 - **Clean rounding, never down:** the converted price is rounded UP to the roundest number that stays within `ROUND_UP_TOLERANCE` (3.5%) of the real conversion. `$10` at R16.598 is R165.98, shown as **R170**. When no round number is close enough (GBP, EUR, CHF and other strong currencies where `$4.99` is about `£3.79`), the plain live conversion is shown instead (**£3.79**). Raise `ROUND_UP_TOLERANCE` in `lib/currency.js` for rounder numbers, lower it for numbers closer to the real rate.
 - **Dollar-family currencies** other than USD get a prefix so they are not read as US dollars: `CA$`, `A$`, `MX$`.
@@ -474,7 +479,7 @@ A live hangout for signed-in members, themed like a GTA Online lobby. Everything
 
 - **Who's here**: members check in every 15s while the page is open (`lobbyPresence/{uid}`); a check-in older than 45s drops off the list. Members with "Show when I'm online" or "Discoverable" off are counted but never listed. Blocked members never see each other. Each member picks a status (Cruising, Looking for crew, Watching trailers, Theorycrafting, Laying low).
 - **Rooms**: six official rooms (defined in `lib/lobby-config.js`, `OFFICIAL_ROOMS`) plus member-run **sessions** (`lobbyRooms/{id}`). Chat is `lobbyRooms/{id}/messages`, fetched every 3s with a `since` cursor; your own message shows instantly. Authors and session hosts can remove messages; hosts can close a session. Sessions disappear after 6 quiet hours, chat older than 48h is purged lazily.
-- **Plans**: how many sessions a member can run at once and how big they can be comes from `SESSION_RULES` in `lib/lobby-config.js` (Drifter 1 x 10 people ... Kingpin 5 x 50).
+- **Plans**: how many sessions a member can run at once and how big they can be comes from `SESSION_RULES` in `lib/lobby-config.js` (Drifter 1 x 10 people ... Kingpin and Creator Plus 5 x 50).
 - **Crew finder**: one post per member (`lobbyCrew/{uid}`), platform / playstyle / region / crew size / note, lasts 48h. Others can filter, **Wave** (toggle) or Message. The poster sees who waved on their own card.
 - **Starting soon**: events that are live or start within 3 days, from the existing events data.
 
@@ -565,3 +570,55 @@ Every new account (email signup or first Google sign-in) goes through a 3-step f
 - **State:** new accounts are saved with `onboarded: false` on `users/{uid}` (older accounts have no field and count as done). A `gta6fb_onboard` cookie mirrors it; the root layout mounts `components/onboarding/OnboardingGate.js`, which sends every page except the info pages (terms, privacy, help ...) to `/welcome`. Log in and Google sign-in re-check the account, log out clears the cookie. Rules live in `lib/onboarding.js` (tested in `tests/onboarding.test.mjs`).
 - **Words:** `components/onboarding/content.js`. **Layout:** `components/onboarding/Onboarding.js`. **Look:** `app/welcome/welcome.css` (every rule starts with `.ob`).
 - **Replay:** a finished member can open `/welcome` again; finishing just returns them home.
+
+## Ads on monetized videos (creator earnings)
+
+A Long form video uploaded with **Monetize this video** on runs ads and pays its creator. The creator picks, in the composer (`components/composer/AdSettings.js`), which ads may play (**Video**, **Photo** or **Both**), where (**Start**, **Middle**, **End**, any mix) and the most ads per video (1 to 3). The choice is stored on the post as `media.adPrefs`; the rules and maths live in `lib/instream-ads.js` (pure, covered by `tests/instream-ads.test.mjs`).
+
+- **Rates.** Advertisers pay per view ($2 per 1,000 photo-ad views, $5 per 1,000 video-ad views, `AD_RATES` in `lib/ads.js`). The creator keeps 30% (`CREATOR_SHARE_PCT`): $0.0006 per photo-ad view, $0.0015 per video-ad view, i.e. an RPM of **$0.60** (photo only), **$1.50** (video only) or about **$1.05** (both, the average; the real payout is always per ad actually shown, so it lands between the two depending on which ran). Money is counted in micro-dollars (`1,000,000 = $1`).
+- **Breaks.** `planBreaks(duration, prefs)` turns the choice into break times: start at 0, end at the last second, middle ones spread evenly. Never more than 3 ads and always at least 60 seconds of video between two ads (mid-roll ads are dropped first when a video is too short). The server computes them and sends them with the post (`media.ads.breaks`, `clip.adBreaks`); the creator's raw settings are not sent to viewers.
+- **Playing.** Real ads from the existing supply, placement `videos` (the Videos placement note in `lib/ads.js` says so). `components/ads/useInstreamAds.js` asks for one ad per break and keeps the video paused while `components/ads/InstreamAd.js` plays it, on the post page (`FeedVideo`) and in the Videos tab (`Slide`). No ad running means no break at all. A photo ad stays 5 seconds and ends by itself; a video ad of 5 seconds or less ends by itself; a longer one shows "Skip in 5" and then **Skip ad**, and never skips by itself.
+- **Money, server side only.** `POST /api/ads/instream` (`lib/instream-ads-data.js`): `serve` picks the ad and reserves the spot (`adSessions`: each spot once per viewer per 6 hours, max 3, 60 s between serves, never the creator's own views or ads, only the ad type the creator allowed); `complete` takes the signed single-use token and, once the ad has really played min(its length, 5 s), moves the advertiser's view counter and the creator's totals in ONE transaction (`ads`, `postEarnings`, `creatorEarnings`, ledger row in `adCredits`). A creator is never paid for a view the advertiser wasn't charged for, and a view is paid at most once.
+- **Seeing it.** `/earnings` (totals, last 7 days, per video; linked from the side menu) and an "Ad earnings" strip under a monetized video for its author.
+- **Still open.** Payouts. While `ADS_FREE_WHILE_TESTING` is on advertisers aren't charged yet, so each ledger row carries `advertiserCharged: false`; turn the flag off with real checkout before paying creators out.
+
+## Landing page: Stories and Hot Discussions
+
+- **Stories** (`components/StoriesRail.js`) is one compact card: a "+" button, "Stories" and "See All" on top, then one row with a dashed "Your Story" circle followed by a ring for each person who has a story up.
+- **Hot Discussions** (`components/HotDiscussions.js`) shows the 3 listed communities with the most members (`fetchTopCommunities` in `lib/community-data.js`, one single-field `memberCount` query, no composite index). Each row has a "Trending" tag, how many people are in, and how long ago it was created (`agoLong` in `lib/time-ago.js`, e.g. "10 days ago"). Post counts are not shown or read for this card.
+
+## Notifications chat (Messages)
+
+Everything that happens to you lands in one read-only chat at the top of Messages, **Notifications** (`/messages?with=my-notifications`): likes on your posts and comments, comments, replies to your comments, new followers, friend requests (and accepted ones), and replies to your stories. Each is a card with the person's avatar, what they did, how long ago, and an arrow to their profile. Likes and comments also get **View post**; new followers get **Follow back**; story replies get **View story** (only while the story is up, otherwise "Story expired" and the reply stays readable) and **Follow**. People you blocked are hidden. The chat counts once toward the Messages badge.
+
+### Pools (why this costs so few reads)
+
+There is no document per notification. Each member has a few **pool** documents, each holding up to 100 notifications (`lib/notif-pool.js`, `lib/notif-pool-data.js`):
+
+```
+users/{uid}/notifPools/{n}   { items: { [key]: { t, at, uid, u, pid?, cid?, x?, sid?, sk?, se? } }, expireAt }
+inbox/{uid}                  { notifSeq, notifUnread, notifLast: { text, at }, notifBackfilled }
+```
+
+- **Writing** one notification is one transaction: read the inbox (`notifSeq` says which pool is current), put the item in that pool, move the counters. The old header-badge counters (`newLikes`, `newComments`, `newFollowers`) are raised in the same write.
+- **Reading** a page is the inbox plus 2 pools: about 3 reads for up to 200 notifications, instead of 200. The chat-list row (preview and unread) comes from the inbox, so it adds no reads. Avatars are drawn from the handle stored in each notification (no member document is read), and Follow buttons look up only the people on that page who need one.
+- **Keeping it small:** a member keeps at most `MAX_POOLS` (12) pools, i.e. the newest 1,200 notifications. The moment pool *p* is started, pool *p - 12* is deleted, so a busy account can never fill the database. Each notification stores only a short slice of the words (120 characters). The same action by the same person on the same thing (like, unlike, like) overwrites itself.
+- **Quiet accounts:** pool documents carry `expireAt` (90 days after the last write). In the Firebase console add a **TTL policy** on collection group `notifPools`, field `expireAt`, to clear them automatically (same idea as `expiresAt` on stories). No composite indexes are needed.
+- **Old story replies:** replies left before this existed are copied into the pools once, the first time the chat list loads, and count as already read.
+- `GET /api/messages/notifications[?before=pool][&read=1]` returns a page. Rules are tested in `tests/notif-pool.test.mjs`.
+
+## Characters (Lucia / Jason)
+
+Every new account must pick a built-in character on sign-up (email form, or the "One last thing" step after a first Google sign-in). `lib/characters.js` holds the two characters (Lucia = female, Jason = male); the art is in `public/characters/*.svg`. The pick is saved as `character` and `gender` on `users/{uid}` and the character is the starting profile picture: `/avatar/[username]` serves it (as a PNG) until the member uploads their own photo, and removing that photo brings the character back. Accounts created before this have no character and are unchanged.
+
+## Comment controls
+
+The creator of a post can delete any comment on it and pin one comment to the top (`POST /api/posts/comments/pin`; one pin per post, pinning another moves it). Comments from people who follow the creator get a lime "Fan" tag (black text), worked out from `follows/{commenter}_{creator}`.
+
+## Ad audience
+
+The Placement step of the ad form has an Audience choice: Everyone (default), Male or Female (the gender picked at sign-up). It is saved on each ad as `audience` and shown in the Ads Manager. Serving does not filter on it yet; when targeting goes live, call `audienceMatches(ad.audience, viewerGender)` from `lib/ads.js` where `serveAd()` picks an ad.
+
+## Gender icon
+
+A small male/female icon sits next to a member's name on their profile (from the sign-up character, changeable in Settings > Character). "Gender on your profile" has a female/male picker plus a "who can see it" choice (`prefs.account.genderAudience`, public by default; see the country flag note above). When it is hidden from the viewer, or the account is private to them, no icon is shown. The old `prefs.account.showGender` switch is read as "No one" when it was off.

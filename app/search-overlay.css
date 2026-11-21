@@ -1,0 +1,142 @@
+/* =====================================================================
+   Full-screen search (components/search/SearchOverlay.js).
+   Opens when a search bar is tapped: recent searches, hot topics, and
+   suggestions as you type. Colours come from the theme variables, so City
+   Look themes keep working; motion is skipped for reduced-motion.
+   ===================================================================== */
+
+.so {
+  position: fixed; inset: 0; z-index: 260; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--text); overscroll-behavior: contain;
+}
+.so-glow {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(60% 38% at 88% -6%, color-mix(in srgb, var(--accent-pink) 20%, transparent), transparent 70%),
+    radial-gradient(54% 34% at 6% 4%, color-mix(in srgb, var(--accent-cyan) 15%, transparent), transparent 70%);
+}
+
+/* ---- top bar ----------------------------------------------------------- */
+.so-bar {
+  position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;
+  background: rgba(var(--bg-rgb), .8);
+  -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+.so-back, .so-clear, .so-act {
+  flex: none; display: grid; place-items: center; border: 0; cursor: pointer; color: inherit;
+  background: transparent; transition: background .15s ease, transform .12s ease, color .15s ease;
+}
+.so-back { width: 42px; height: 42px; border-radius: 50%; }
+.so-back:hover, .so-act:hover, .so-clear:hover { background: rgba(255, 255, 255, .09); }
+.so-back:active, .so-act:active { transform: scale(.92); }
+.so-back svg, .so-clear svg, .so-act svg, .so-field-icon svg, .so-ico svg, .so-up svg, .so-flame svg {
+  width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+.so-field {
+  position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+  height: 46px; padding: 0 6px 0 14px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.so-field:focus-within {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 18%, transparent), 0 0 28px color-mix(in srgb, var(--accent-pink) 14%, transparent);
+}
+.so-field-icon { display: inline-flex; color: var(--text-dim); }
+.so-field:focus-within .so-field-icon { color: var(--accent-cyan); }
+.so-input {
+  flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent;
+  color: var(--text); font: inherit; font-size: 16px; /* 16px: iOS does not zoom the page */
+}
+.so-input::placeholder { color: #8a8399; }
+.so-input::-webkit-search-cancel-button, .so-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+.so-clear { width: 32px; height: 32px; border-radius: 50%; color: var(--text-dim); }
+.so-clear svg { width: 16px; height: 16px; }
+.so-bar .sb-mic { flex: none; width: 42px; height: 42px; }
+.so-bar .sb-hint { position: absolute; left: 62px; right: 62px; top: calc(100% - 2px); text-align: center; }
+
+/* ---- body -------------------------------------------------------------- */
+.so-body { position: relative; z-index: 1; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.so-col { max-width: 700px; margin: 0 auto; padding: 8px 8px calc(env(safe-area-inset-bottom, 0px) + 32px); }
+
+.so-sec { margin-top: 10px; }
+.so-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 14px 12px 6px; }
+.so-head h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; letter-spacing: .01em; }
+.so-head p { margin-top: 2px; font-size: 12.5px; color: var(--text-dim); }
+.so-flame {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; color: #fff;
+  background: linear-gradient(135deg, var(--accent-pink), #ff8a3d);
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent-pink) 70%, transparent);
+}
+.so-flame svg { width: 15px; height: 15px; stroke-width: 2.3; }
+.so-clearall {
+  border: 0; background: transparent; color: var(--accent-cyan); font: inherit; font-size: 13px; font-weight: 700;
+  padding: 6px 8px; border-radius: 8px; cursor: pointer;
+}
+.so-clearall:hover { background: color-mix(in srgb, var(--accent-cyan) 12%, transparent); }
+
+.so-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.so-row { display: flex; align-items: center; border-radius: 16px; transition: background .14s ease; }
+.so-row:hover, .so-row.is-active { background: var(--surface); }
+.so-row.is-active { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-cyan) 35%, transparent); }
+.so-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; min-height: 56px;
+  padding: 8px 6px 8px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  border-radius: 16px;
+}
+.so-main:focus-visible, .so-act:focus-visible, .so-back:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.so-ico { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--text-dim); background: color-mix(in srgb, var(--surface-raised) 70%, transparent); }
+.so-ico svg { width: 19px; height: 19px; }
+.so-text { flex: 1; min-width: 0; font-size: 16px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.so-text b { font-weight: 800; }
+.so-act { width: 44px; height: 44px; border-radius: 50%; color: var(--text-dim); }
+.so-act svg { width: 20px; height: 20px; }
+
+/* "Search for ..." */
+.so-go .so-ico { color: var(--on-accent); background: linear-gradient(135deg, var(--accent-cyan), var(--accent-lime)); }
+.so-go .so-text { white-space: normal; }
+
+/* Hot list: ranks */
+.so-rank {
+  flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px;
+  font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-dim);
+  background: color-mix(in srgb, var(--surface-raised) 70%, transparent);
+}
+.so-top1 .so-rank, .so-top2 .so-rank, .so-top3 .so-rank { color: #fff; }
+.so-top1 .so-rank { background: linear-gradient(135deg, var(--accent-pink), #ff8a3d); box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--accent-pink) 80%, transparent); }
+.so-top2 .so-rank { background: linear-gradient(135deg, #a259ff, var(--accent-pink)); }
+.so-top3 .so-rank { background: linear-gradient(135deg, var(--accent-cyan), #3b82f6); }
+.so-top1 .so-text, .so-top2 .so-text, .so-top3 .so-text { font-weight: 700; }
+.so-up {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 7px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 800; letter-spacing: .02em; color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2));
+}
+.so-up svg { width: 13px; height: 13px; stroke-width: 2.6; }
+
+/* Loading */
+.so-skel { display: flex; flex-direction: column; gap: 10px; padding: 16px 12px; }
+.so-skel span { height: 44px; border-radius: 14px; background: linear-gradient(100deg, var(--surface) 30%, var(--surface-raised) 50%, var(--surface) 70%) 0 0 / 220% 100%; }
+
+/* ---- desktop ----------------------------------------------------------- */
+@media (min-width: 800px) {
+  .so-bar { padding-left: max(16px, calc((100vw - 700px) / 2 - 56px)); padding-right: max(16px, calc((100vw - 700px) / 2)); }
+  .so-field { height: 50px; }
+  .so-col { padding-top: 18px; }
+}
+
+/* ---- motion ------------------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="reduced"]) .so { animation: soIn .26s cubic-bezier(.2, .8, .2, 1) both; }
+  html:not([data-motion="reduced"]) .so-row { animation: soRow .34s cubic-bezier(.2, .8, .2, 1) both; }
+  html:not([data-motion="reduced"]) .so-row:nth-child(2) { animation-delay: .03s; }
+  html:not([data-motion="reduced"]) .so-row:nth-child(3) { animation-delay: .06s; }
+  html:not([data-motion="reduced"]) .so-row:nth-child(4) { animation-delay: .09s; }
+  html:not([data-motion="reduced"]) .so-row:nth-child(n+5) { animation-delay: .12s; }
+  html:not([data-motion="reduced"]) .so-skel span { animation: soShimmer 1.3s linear infinite; }
+}
+@keyframes soIn { from { opacity: 0; transform: translateY(16px) scale(.99); } to { opacity: 1; transform: none; } }
+@keyframes soRow { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes soShimmer { to { background-position: -220% 0; } }
