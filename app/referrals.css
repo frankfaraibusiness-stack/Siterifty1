@@ -1,0 +1,276 @@
+/* ===== Refer & Earn (/referrals) =====
+   Everything starts with .rf- so nothing leaks into the rest of the site. Money is gold, XP is lime,
+   the link is cyan, the main action is pink. Fonts: --font-display for the big payout figure,
+   --font-hud for numbers. */
+.rf {
+  --gold: #ffd36b;
+  --rf-line: color-mix(in srgb, var(--border) 88%, transparent);
+  max-width: 1080px; margin: 0 auto; padding: 0 20px 110px; color: var(--text);
+}
+.rf *, .rf *::before, .rf *::after { box-sizing: border-box; }
+.rf a { color: var(--accent-cyan); text-underline-offset: 3px; }
+.rf a:hover { color: var(--text); }
+.rf .up-back { color: var(--text-dim); text-decoration: none; }
+
+/* ---------------------------------------------------------------- hero */
+.rf-hero {
+  position: relative; overflow: hidden; isolation: isolate; display: grid; gap: 28px; align-items: center;
+  padding: clamp(26px, 5vw, 52px); border-radius: 28px;
+  background: linear-gradient(160deg, var(--surface-raised), var(--surface) 70%);
+  border: 1px solid var(--border);
+}
+.rf-hero-glow {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(560px 280px at 6% -4%, color-mix(in srgb, var(--accent-pink) 32%, transparent), transparent 70%),
+    radial-gradient(520px 260px at 98% 8%, color-mix(in srgb, var(--accent-cyan) 22%, transparent), transparent 70%),
+    radial-gradient(520px 240px at 70% 120%, color-mix(in srgb, var(--gold) 20%, transparent), transparent 70%);
+}
+.rf-eyebrow {
+  display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .08em;
+  color: var(--accent-cyan); background: color-mix(in srgb, var(--accent-cyan) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 40%, transparent);
+}
+.rf-eyebrow-gold { color: var(--gold); background: rgba(255,211,107,.1); border-color: rgba(255,211,107,.4); }
+.rf-title { margin-top: 16px; font-size: clamp(30px, 5vw, 50px); font-weight: 900; letter-spacing: -.028em; line-height: 1.04; }
+.rf-sub { max-width: 560px; margin-top: 14px; font-size: clamp(15px, 1.8vw, 17px); line-height: 1.6; color: var(--text-dim); }
+
+/* ---- link card ---- */
+.rf-link { margin-top: 24px; max-width: 580px; }
+.rf-link-label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.rf-link-row { display: flex; gap: 8px; }
+.rf-link-field {
+  flex: 1; min-width: 0; height: 52px; padding: 0 16px; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 600;
+  font-family: var(--font-hud), ui-monospace, monospace; letter-spacing: .01em; color: var(--accent-cyan);
+  background: rgba(10,9,16,.55); border: 1px solid color-mix(in srgb, var(--accent-cyan) 38%, var(--border));
+  text-overflow: ellipsis; outline: none;
+}
+.rf-link-field:focus-visible { border-color: var(--accent-cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 28%, transparent); }
+.rf-link-row.is-idle .rf-link-field { color: var(--text-dim); border-style: dashed; border-color: var(--border); opacity: .85; }
+.rf-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: none; height: 52px; padding: 0 20px;
+  border: 0; border-radius: 14px; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; color: #fff;
+  transition: transform .15s ease, filter .15s ease, background .2s ease;
+}
+.rf-btn svg { width: 18px; height: 18px; }
+.rf-btn:active { transform: scale(.97); }
+.rf-btn-primary { background: var(--accent-pink); box-shadow: 0 10px 26px -12px var(--accent-pink); }
+.rf-btn-primary:hover { filter: brightness(1.08); }
+.rf-btn-ghost { background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px var(--border); }
+.rf-btn-ghost:hover { background: rgba(255,255,255,.14); }
+.rf-btn:focus-visible, .rf-chipbtn:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; }
+.rf-cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.rf-share { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.rf-chipbtn {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px;
+  font-weight: 700; text-decoration: none; cursor: pointer; color: var(--text); background: rgba(255,255,255,.06);
+  border: 1px solid var(--border); transition: background .2s ease, border-color .2s ease;
+}
+.rf .rf-chipbtn { color: var(--text); }
+.rf-chipbtn:hover { background: rgba(255,255,255,.12); border-color: var(--text-dim); }
+.rf-chipbtn svg { width: 15px; height: 15px; }
+.rf-note { min-height: 20px; margin-top: 12px; font-size: 13px; line-height: 1.5; color: var(--text-dim); }
+.rf-cta + .rf-note { margin-top: 14px; }
+
+/* ---- the example payout card ---- */
+.rf-receipt {
+  position: relative; padding: 22px; border-radius: 22px; background: rgba(10,9,16,.6);
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, var(--border)); box-shadow: 0 30px 60px -34px rgba(0,0,0,.8);
+}
+.rf-receipt-tag {
+  position: absolute; top: -11px; right: 18px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: #2a1d00; background: var(--gold);
+}
+.rf-receipt-who { display: flex; align-items: center; gap: 12px; }
+.rf-receipt-av {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-cyan));
+}
+.rf-receipt-who b { display: block; font-size: 15px; }
+.rf-receipt-who small { font-size: 12.5px; color: var(--text-dim); }
+.rf-receipt-xp { margin-top: 20px; }
+.rf-receipt-xp-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-dim); }
+.rf-receipt-xp-top b { font-family: var(--font-hud), ui-monospace, monospace; font-size: 14px; color: var(--accent-lime); }
+.rf-receipt-line {
+  display: flex; justify-content: space-between; align-items: baseline; margin-top: 16px; padding-top: 14px;
+  border-top: 1px dashed var(--rf-line); font-size: 14px; color: var(--text-dim);
+}
+.rf-receipt-plus { font-family: var(--font-hud), ui-monospace, monospace; font-size: 18px; color: var(--gold); }
+.rf-receipt-line.is-total { font-weight: 700; color: var(--text); }
+.rf-receipt-line.is-total b { font-family: var(--font-display), sans-serif; font-size: 26px; color: var(--gold); letter-spacing: .01em; }
+
+/* ---------------------------------------------------------------- progress bars */
+.rf-bar { height: 7px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,.1); }
+.rf-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-lime-2), var(--accent-lime)); transition: width .5s ease; }
+.rf-bar.is-full i { width: 100%; background: linear-gradient(90deg, #ffb53d, var(--gold)); }
+.rf-bar-lg { height: 10px; }
+.rf-bar-lg i { animation: rfFill 1.4s cubic-bezier(.2,.8,.2,1) .3s both; }
+@keyframes rfFill { from { width: 0; } to { width: 100%; } }
+
+/* ---------------------------------------------------------------- sections */
+.rf-section, .rf-dash { margin-top: clamp(40px, 6vw, 64px); }
+.rf-head h2 { font-size: clamp(22px, 3.2vw, 30px); font-weight: 900; letter-spacing: -.02em; }
+.rf-head p { max-width: 640px; margin-top: 8px; font-size: 15px; line-height: 1.6; color: var(--text-dim); }
+.rf-card { padding: 20px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); }
+.rf-fine { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
+.rf-foot { margin-top: 18px; }
+
+/* ---- dashboard ---- */
+.rf-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.rf-stat {
+  display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.rf-stat-label { font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.rf-stat-value { font-family: var(--font-hud), ui-monospace, monospace; font-size: clamp(26px, 4vw, 34px); font-weight: 700; line-height: 1.1; }
+.rf-stat-sub { font-size: 12.5px; color: var(--text-dim); }
+.rf-stat.is-cyan { border-color: color-mix(in srgb, var(--accent-cyan) 40%, var(--border)); }
+.rf-stat.is-cyan .rf-stat-value { color: var(--accent-cyan); }
+.rf-stat.is-lime { border-color: color-mix(in srgb, var(--accent-lime) 40%, var(--border)); }
+.rf-stat.is-lime .rf-stat-value { color: var(--accent-lime); }
+.rf-stat.is-gold { border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); background: linear-gradient(180deg, rgba(255,211,107,.08), var(--surface)); }
+.rf-stat.is-gold .rf-stat-value { color: var(--gold); }
+
+.rf-list { margin-top: 14px; padding: 6px 18px 10px; }
+.rf-list-head { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 0 8px; }
+.rf-list-head h3 { font-size: 16px; font-weight: 800; }
+.rf-list-head span { font-size: 12.5px; color: var(--text-dim); }
+.rf-list ul { list-style: none; }
+.rf-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.rf-row + .rf-row { border-top: 1px solid var(--rf-line); }
+.rf-av { flex: none; width: 42px; height: 42px; border-radius: 50%; background-size: cover; background-position: center; border: 2px solid rgba(255,255,255,.14); }
+.rf-row-main { flex: 1; min-width: 0; }
+.rf-row-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px; min-width: 0; }
+.rf-row-top a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14.5px; font-weight: 800; color: var(--text); text-decoration: none; }
+.rf-row-top a:hover { text-decoration: underline; }
+.rf-row-top small { flex: none; font-size: 12px; color: var(--text-dim); }
+.rf-pill {
+  flex: none; padding: 5px 10px; border-radius: 999px; font-family: var(--font-hud), ui-monospace, monospace; font-size: 12px; font-weight: 600;
+  color: var(--text-dim); background: rgba(255,255,255,.06); border: 1px solid var(--border); white-space: nowrap;
+}
+.rf-pill.is-paid { color: #2a1d00; font-weight: 700; background: var(--gold); border-color: transparent; }
+.rf-empty { margin-top: clamp(40px, 6vw, 64px); }
+.rf-empty h2 { font-size: 20px; }
+.rf-empty p { margin-top: 6px; color: var(--text-dim); font-size: 14px; }
+.rf-empty-inline { display: grid; gap: 4px; padding: 22px 4px 20px; text-align: center; }
+.rf-empty-inline b { font-size: 15px; }
+.rf-empty-inline span { font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
+
+/* ---- steps ---- */
+.rf-steps { display: grid; gap: 14px; margin-top: 20px; list-style: none; counter-reset: none; }
+.rf-step { position: relative; padding: 22px 20px 22px 20px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); }
+.rf-step-n {
+  display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 14px; border-radius: 11px;
+  font-family: var(--font-hud), ui-monospace, monospace; font-size: 16px; font-weight: 700; color: var(--on-accent); background: var(--accent-lime);
+}
+.rf-step:nth-child(2) .rf-step-n { background: var(--accent-cyan); }
+.rf-step:nth-child(3) .rf-step-n { background: var(--gold); }
+.rf-step h3 { font-size: 17px; font-weight: 800; }
+.rf-step p { margin-top: 6px; font-size: 14.5px; line-height: 1.6; color: var(--text-dim); }
+
+/* ---- the payout band ---- */
+.rf-pay {
+  display: grid; gap: 22px; align-items: center; margin-top: clamp(40px, 6vw, 64px); padding: clamp(22px, 4vw, 38px); border-radius: 26px;
+  background:
+    radial-gradient(520px 220px at 100% 0%, rgba(255,211,107,.16), transparent 70%),
+    linear-gradient(160deg, var(--surface-raised), var(--surface));
+  border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--border));
+}
+.rf-pay-title { margin-top: 14px; font-size: clamp(22px, 3.4vw, 32px); font-weight: 900; letter-spacing: -.02em; line-height: 1.15; }
+.rf-pay-amount { font-family: var(--font-display), sans-serif; font-weight: 400; color: var(--gold); letter-spacing: .01em; }
+.rf-pay-main p { max-width: 520px; margin-top: 12px; font-size: 15px; line-height: 1.6; color: var(--text-dim); }
+.rf-pay-list { display: grid; gap: 10px; list-style: none; }
+.rf-pay-list li {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; font-size: 14.5px; font-weight: 600;
+  background: rgba(10,9,16,.4); border: 1px solid var(--rf-line);
+}
+.rf-pay-list svg { flex: none; width: 22px; height: 22px; padding: 4px; border-radius: 50%; color: var(--on-accent); background: var(--accent-lime); }
+
+/* ---- XP guide ---- */
+.rf-xp-grid { display: grid; gap: 14px; margin-top: 20px; }
+.rf-xp-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.rf-xp-list { list-style: none; }
+.rf-xp-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; font-size: 14.5px; }
+.rf-xp-list li + li { border-top: 1px solid var(--rf-line); }
+.rf-xp-list small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-dim); }
+.rf-xp-list b { flex: none; font-family: var(--font-hud), ui-monospace, monospace; font-size: 14px; color: var(--accent-lime); }
+.rf-xp-extras { display: grid; gap: 10px; margin: 14px 0 0; padding: 14px 0 0; list-style: none; border-top: 1px solid var(--rf-line); }
+.rf-xp-extras li { font-size: 13.5px; line-height: 1.55; color: var(--text-dim); }
+.rf-xp-extras b { color: var(--text); }
+
+.rf-ladder { list-style: none; }
+.rf-ladder li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 14.5px; }
+.rf-ladder li + li { border-top: 1px solid var(--rf-line); }
+.rf-ladder li b { font-family: var(--font-hud), ui-monospace, monospace; font-size: 13px; font-weight: 600; color: var(--text-dim); }
+.rf-ladder .rf-ladder-goal {
+  margin: 8px -10px; padding: 12px 12px; border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); border-radius: 14px;
+  background: rgba(255,211,107,.1); color: var(--gold); font-weight: 700; justify-content: center; text-align: center;
+}
+.rf-ladder .rf-ladder-goal + li { border-top: 0; }
+.rf-ladder-goal b { color: var(--gold); font-size: 14px; }
+
+/* ---- estimator ---- */
+.rf-est {
+  display: grid; gap: 22px; margin-top: 20px; padding: clamp(20px, 3.4vw, 30px); border-radius: 24px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.rf-est-out { display: grid; gap: 6px; }
+.rf-est-label { font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.rf-est-amount { font-family: var(--font-display), sans-serif; font-size: clamp(40px, 8vw, 68px); font-weight: 400; line-height: 1.05; color: var(--gold); overflow-wrap: anywhere; }
+.rf-est-math { font-size: 13.5px; line-height: 1.5; color: var(--text-dim); }
+.rf-est-ctl { display: grid; gap: 12px; }
+.rf-est-ctl label { font-size: 14px; font-weight: 700; }
+.rf-est-ctl input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 99px; outline: none; cursor: pointer;
+  background: linear-gradient(90deg, var(--gold) var(--fill, 50%), rgba(255,255,255,.14) var(--fill, 50%));
+}
+.rf-est-ctl input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 4px solid var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,.5); }
+.rf-est-ctl input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 4px solid var(--gold); }
+.rf-est-ctl input[type=range]:focus-visible { box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent); }
+.rf-est-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.rf-est-presets button {
+  min-height: 36px; padding: 0 14px; border-radius: 999px; font: inherit; font-family: var(--font-hud), ui-monospace, monospace; font-size: 13px; font-weight: 600;
+  cursor: pointer; color: var(--text); background: rgba(255,255,255,.06); border: 1px solid var(--border);
+}
+.rf-est-presets button:hover { background: rgba(255,255,255,.12); }
+.rf-est-presets button.is-on { color: #2a1d00; background: var(--gold); border-color: transparent; }
+.rf-est-presets button:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+
+/* ---- FAQ ---- */
+.rf-faq { display: grid; gap: 10px; margin-top: 18px; }
+.rf-faq details { border-radius: 16px; background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.rf-faq details[open] { border-color: color-mix(in srgb, var(--accent-cyan) 38%, var(--border)); }
+.rf-faq summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; list-style: none; cursor: pointer;
+  font-size: 15px; font-weight: 800;
+}
+.rf-faq summary::-webkit-details-marker { display: none; }
+.rf-faq summary::after { content: "+"; flex: none; font-size: 22px; font-weight: 500; line-height: 1; color: var(--text-dim); transition: transform .2s ease; }
+.rf-faq details[open] summary::after { transform: rotate(45deg); color: var(--accent-cyan); }
+.rf-faq summary:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: -2px; border-radius: 16px; }
+.rf-faq p { padding: 0 18px 18px; font-size: 14.5px; line-height: 1.65; color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- wider screens */
+@media (min-width: 640px) {
+  .rf-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .rf-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .rf-hero { grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr); gap: 44px; }
+  .rf-pay { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 36px; }
+  .rf-xp-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); align-items: start; }
+  .rf-est { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 44px; }
+  .rf-est .rf-fine { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .rf { padding-left: 14px; padding-right: 14px; }
+  .rf-link-row { flex-direction: column; }
+  .rf-link-row .rf-btn { width: 100%; }
+  .rf-cta .rf-btn { flex: 1; }
+  .rf-row-top { flex-wrap: wrap; row-gap: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rf-bar-lg i { animation: none; }
+  .rf-bar i, .rf-btn, .rf-chipbtn, .rf-faq summary::after { transition: none; }
+}

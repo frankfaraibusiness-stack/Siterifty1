@@ -1,0 +1,543 @@
+/* =====================================================================
+   Side menu (components/SideMenu.js), opened by the hamburger.
+
+   Concept: the GTA pause menu. Products are "missions": skewed bars with a
+   coloured radar blip, a highlight that wipes across on hover, and a slam-in
+   when the menu opens. Rank is shown as wanted-level style pips that light up
+   once the plan is known. Section rules are hazard tape.
+
+   Colours come from the site's look variables (City Look), type from
+   --font-display (Bowlby One, set in app/layout.js). Loaded after compact.css.
+   ===================================================================== */
+
+.pm-root {
+  --pm-w: min(86vw, 344px);
+  --pm-slant: -8deg;
+  --pm-dark: #0d0b10;
+  position: fixed;
+  inset: 0;
+  z-index: 150; /* above the sticky header (100), below modals (200+) */
+}
+
+.pm-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 6, 11, 0.66);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: pmFade 0.25s ease both;
+}
+
+.pm {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--pm-w);
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(260px 220px at 100% 0%, color-mix(in srgb, var(--accent-pink) 22%, transparent), transparent 70%),
+    radial-gradient(240px 240px at 0% 0%, color-mix(in srgb, var(--accent-cyan) 14%, transparent), transparent 70%),
+    var(--bg);
+  box-shadow: 20px 0 60px -24px rgba(0, 0, 0, 0.85);
+  animation: pmSlideIn 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+/* neon edge */
+.pm::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -1px;
+  bottom: 0;
+  width: 2px;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--accent-pink), var(--accent-cyan));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-pink) 60%, transparent);
+}
+
+.pm-root[data-state="closing"] .pm-scrim { animation: pmFadeOut 0.22s ease both; }
+.pm-root[data-state="closing"] .pm { animation: pmSlideOut 0.22s cubic-bezier(0.5, 0, 0.8, 0.4) both; }
+
+/* ---- Sticky top bar: logo + close ---- */
+.pm-top {
+  flex: none;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px 0 14px;
+  background: rgba(var(--bg-rgb), 0.78);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* The name must never reach the close button: the logo and text shrink to fit, and the
+   text is cut short with "…" if a very narrow phone still doesn't leave room. */
+.pm .brand { min-width: 0; flex: 1 1 auto; gap: 8px; overflow: hidden; }
+.pm .brand-logo { flex: none; height: 38px; }
+.pm .brand-word { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: clamp(11px, 3.6vw, 15px); letter-spacing: 0.3px; }
+@media (min-width: 480px) {
+  .pm .brand-logo { height: 42px; }
+  .pm .brand-word { font-size: 17px; }
+}
+
+.pm-x {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 12px;
+  border: 1px solid var(--lp-line);
+  background: var(--surface);
+  transition: transform 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.pm-x svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pm-x:hover { color: var(--accent-pink); border-color: var(--accent-pink); transform: rotate(90deg); }
+.pm-x:active { transform: rotate(90deg) scale(0.92); }
+
+/* ---- Scrolling body ---- */
+.pm-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 14px 22px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent-pink) 55%, transparent) transparent;
+}
+
+/* ---- Player card ---- */
+.pm-card {
+  --a: var(--accent-cyan);
+  --b: var(--lp-violet-2);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 22px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(135deg, var(--a), var(--b)) border-box;
+}
+
+/* the Vice City sunset, behind the name */
+.pm-card::before {
+  content: "";
+  position: absolute;
+  top: -34px;
+  right: -30px;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.3;
+  background: linear-gradient(180deg, var(--accent-lime), var(--accent-pink) 58%, var(--lp-violet));
+  -webkit-mask-image: linear-gradient(180deg, #000 0 50%, transparent 50% 54%, #000 54% 64%, transparent 64% 70%, #000 70% 81%, transparent 81% 89%, #000 89%);
+  mask-image: linear-gradient(180deg, #000 0 50%, transparent 50% 54%, #000 54% 64%, transparent 64% 70%, #000 70% 81%, transparent 81% 89%, #000 89%);
+}
+
+.pm-who { position: relative; display: flex; align-items: center; gap: 12px; }
+.pm-who-text { min-width: 0; flex: 1; }
+
+.pm-av {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--a), var(--b));
+}
+.pm-av-in {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--surface-raised);
+}
+.pm-av-letter {
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 22px;
+  color: var(--text);
+}
+.pm-av-in img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.pm-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 18px;
+  line-height: 1.15;
+}
+.pm-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+}
+
+.pm-rank { display: flex; align-items: center; gap: 9px; margin-top: 8px; min-height: 16px; }
+.pm-rank-name { font-size: 12.5px; font-weight: 700; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* wanted-level style pips: one per plan, they light up one after another */
+.pm-pips { display: flex; gap: 4px; flex: none; }
+.pm-pips i {
+  display: block;
+  width: 17px;
+  height: 7px;
+  border-radius: 2px;
+  transform: skewX(-20deg);
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  transition-delay: calc(var(--p) * 90ms);
+}
+.pm-pips i.on {
+  background: linear-gradient(90deg, var(--a), var(--b));
+  box-shadow: 0 0 9px -1px var(--a);
+}
+.pm-rank.pm-loading .pm-pips i { animation: pmPulse 1s ease-in-out infinite; animation-delay: calc(var(--p) * 120ms); }
+
+.pm-upgrade {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  margin-top: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2));
+  box-shadow: 0 10px 22px -12px var(--accent-lime);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.pm-upgrade svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.pm-upgrade:hover { transform: translateY(-1px); box-shadow: 0 14px 26px -12px var(--accent-lime); }
+.pm-upgrade:active { transform: scale(0.97); }
+/* one shine pass every few seconds: the only idle motion in the menu */
+.pm-upgrade::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 28%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  animation: pmShine 5.5s ease-in-out 1.4s infinite;
+}
+
+/* ---- Sections ---- */
+.pm-sec { position: relative; }
+.pm-sec + .pm-sec { margin-top: 24px; }
+
+/* heading + hazard tape */
+.pm-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 2px 11px;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text);
+}
+.pm-h::after {
+  content: "";
+  flex: 1;
+  height: 7px;
+  opacity: 0.5;
+  background: repeating-linear-gradient(-55deg, var(--accent-lime) 0 3px, transparent 3px 8px);
+}
+
+/* ---- Missions (products) ---- */
+.pm-list { list-style: none; display: grid; gap: 9px; }
+
+.pm-row {
+  --rc: var(--accent-cyan);
+  position: relative;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: skewX(var(--pm-slant));
+  transition: transform 0.16s ease, color 0.16s ease;
+  /* the slam-in: backwards fill, so :active can still press the row */
+  animation: pmSlam 0.46s cubic-bezier(0.2, 1.15, 0.3, 1) backwards;
+  animation-delay: calc(140ms + var(--i) * 55ms);
+}
+/* colour wipe on hover / focus */
+.pm-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--rc);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+/* the notch on the left edge */
+.pm-row::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--rc);
+}
+.pm-row:hover::before,
+.pm-row:focus-visible::before { transform: scaleX(1); }
+.pm-row:hover,
+.pm-row:focus-visible { color: var(--pm-dark); }
+.pm-row:active { transform: skewX(var(--pm-slant)) scale(0.975); }
+
+/* where you are right now */
+.pm-row.pm-here { background: color-mix(in srgb, var(--rc) 20%, var(--surface)); }
+
+/* straighten the content inside the skewed bar */
+.pm-row-in {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 18px;
+  transform: skewX(calc(var(--pm-slant) * -1));
+}
+
+.pm-blip {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--rc);
+  background: color-mix(in srgb, var(--rc) 16%, var(--pm-dark));
+  box-shadow: inset 0 0 0 2px var(--rc);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.pm-blip svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pm-row:hover .pm-blip,
+.pm-row:focus-visible .pm-blip { background: var(--pm-dark); box-shadow: inset 0 0 0 2px var(--pm-dark); }
+.pm-row:hover .pm-blip { color: var(--rc); }
+
+/* radar ping on the blip of the page you are on */
+.pm-row.pm-here .pm-blip::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--rc);
+  opacity: 0;
+  animation: pmPing 1.7s ease-out 0.7s 3;
+}
+
+.pm-row-t { min-width: 0; display: grid; gap: 3px; }
+.pm-row-title {
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.1;
+  letter-spacing: 0.2px;
+}
+.pm-row-note {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.16s ease;
+}
+.pm-row:hover .pm-row-note,
+.pm-row:focus-visible .pm-row-note { color: rgba(13, 11, 16, 0.72); }
+
+/* blip colours, like radar blips by mission type */
+.pm-t-cyan   { --rc: var(--accent-cyan); }
+.pm-t-violet { --rc: var(--lp-violet-2); }
+.pm-t-pink   { --rc: var(--accent-pink); }
+.pm-t-lime   { --rc: var(--accent-lime); }
+.pm-t-blue   { --rc: #5ab0ff; }
+.pm-t-orange { --rc: #ffab2e; }
+.pm-t-gold   { --rc: #ffd36b; }
+
+/* ---- Signed out: missions are blurred behind a sign-in card ---- */
+.pm-missions.pm-locked .pm-list {
+  filter: blur(5px) saturate(0.6);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.pm-gate {
+  position: absolute;
+  inset: 34px 0 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+}
+.pm-gate-card {
+  width: 100%;
+  padding: 20px 16px 16px;
+  text-align: center;
+  border-radius: 18px;
+  border: 1.5px solid var(--lp-line);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.85);
+  animation: pmPop 0.42s cubic-bezier(0.2, 1.2, 0.3, 1) 0.5s backwards;
+}
+.pm-gate-lock {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2));
+  box-shadow: 0 10px 22px -10px var(--accent-lime);
+}
+.pm-gate-lock svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pm-gate-card h3 {
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+}
+.pm-gate-card p { margin: 7px 0 14px; font-size: 13px; line-height: 1.4; font-weight: 600; color: var(--text-dim); }
+
+.pm-btn {
+  display: block;
+  width: 100%;
+  height: 44px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent-lime), var(--accent-lime-2));
+  box-shadow: 0 10px 22px -12px var(--accent-lime);
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.pm-btn:hover { transform: translateY(-1px); }
+.pm-btn:active { transform: scale(0.97); }
+.pm-btn.ghost {
+  height: 40px;
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: none;
+  box-shadow: none;
+}
+.pm-btn.ghost:hover { color: var(--text); transform: none; }
+
+/* ---- Fine print + help: quiet rows ---- */
+.pm-quiet { list-style: none; display: grid; gap: 2px; }
+.pm-q {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pm-q svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+.pm-q:hover,
+.pm-q:focus-visible { color: var(--text); background: rgba(255, 255, 255, 0.07); }
+
+/* ---- Sticky bottom: log out ---- */
+.pm-foot {
+  flex: none;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: rgba(var(--bg-rgb), 0.88);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.pm-err { margin: 0 2px 8px; font-size: 12.5px; font-weight: 700; color: var(--accent-pink); }
+
+.pm-out {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  border-radius: 12px;
+  color: color-mix(in srgb, var(--accent-pink) 72%, #fff);
+  background: color-mix(in srgb, var(--accent-pink) 9%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent-pink) 38%, transparent);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.pm-out svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s ease; }
+.pm-out:hover { background: color-mix(in srgb, var(--accent-pink) 20%, var(--surface)); border-color: var(--accent-pink); }
+.pm-out:hover svg { transform: translateX(4px); }
+.pm-out:active { transform: scale(0.98); }
+.pm-out:disabled { opacity: 0.65; cursor: default; }
+
+/* ---- Motion ---- */
+@keyframes pmFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pmFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes pmSlideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes pmSlideOut { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes pmSlam {
+  from { opacity: 0; transform: translateX(-42px) skewX(var(--pm-slant)); }
+  to { opacity: 1; transform: translateX(0) skewX(var(--pm-slant)); }
+}
+@keyframes pmPop { from { opacity: 0; transform: translateY(14px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes pmPing { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes pmPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes pmShine { 0%, 62% { left: -40%; } 100% { left: 130%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-root *,
+  .pm-root *::before,
+  .pm-root *::after { animation: none !important; transition-duration: 0s !important; }
+}
+html[data-motion="reduced"] .pm-root *,
+html[data-motion="reduced"] .pm-root *::before,
+html[data-motion="reduced"] .pm-root *::after { animation: none !important; transition-duration: 0s !important; }
+
+/* Short screens (phones in landscape): tighter rows */
+@media (max-height: 560px) {
+  .pm-row-in { padding-top: 7px; padding-bottom: 7px; }
+  .pm-card { margin-bottom: 16px; }
+}
